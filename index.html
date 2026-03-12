@@ -121,7 +121,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 .saldo-bar.neg{background:var(--red)}
 .saldo-detail{font-family:var(--mono);font-size:10px;color:var(--tx2);margin-top:4px}
 /* ── USER SYSTEM ── */
-#userOverlay{position:fixed;inset:0;background:rgba(10,12,15,.97);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+#userOverlay{position:fixed;inset:0;background:rgba(10,12,15,.97);z-index:9999;align-items:center;justify-content:center;padding:20px}
 .user-box{background:var(--sur);border:1px solid var(--bdr2);border-radius:16px;padding:30px 24px;width:100%;max-width:420px}
 .user-box-title{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--tx);margin-bottom:6px}
 .user-box-sub{font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:24px}
@@ -140,7 +140,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <!-- USER OVERLAY -->
-<div id="userOverlay" style="position:fixed;inset:0;background:rgba(10,12,15,.97);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
+<div id="userOverlay" style="position:fixed;inset:0;background:rgba(10,12,15,.97);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
   <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:28px 24px;width:min(360px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.5)">
     <div style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--tx);margin-bottom:4px">🕐 JORNADA BRF</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--tx3);margin-bottom:22px">Cada empleado tiene su propio espacio</div>
@@ -581,12 +581,28 @@ window.loginSubmit=function(isRegister){
     });
 };
 
+function showLoginOverlay(){
+  var el=document.getElementById('userOverlay');
+  el.style.display='flex';
+  document.body.style.overflow='hidden';
+  document.body.style.position='fixed';
+  document.body.style.width='100%';
+}
+
+function hideLoginOverlay(){
+  var el=document.getElementById('userOverlay');
+  el.style.display='none';
+  document.body.style.overflow='';
+  document.body.style.position='';
+  document.body.style.width='';
+}
+
 function onLoginSuccess(user){
   _currentUser=user;
   _uid=user.uid;
   var emailShort=user.email.split('@')[0];
   document.getElementById('userBtn').textContent='👤 '+emailShort;
-  document.getElementById('userOverlay').style.display='none';
+  hideLoginOverlay();
   setLoginLoading(false);
   setSyncBadge('sync');
   // Cargar datos de Firebase
@@ -615,7 +631,7 @@ window.abrirUsuarios=function(){
     document.getElementById('logoutEmail').textContent=_currentUser.email;
     document.getElementById('logoutModal').style.display='flex';
   } else {
-    document.getElementById('userOverlay').style.display='flex';
+    showLoginOverlay();
   }
 };
 
@@ -624,7 +640,7 @@ window.logoutConfirm=function(){
   _auth.signOut().then(function(){
     _currentUser=null; _uid=null; _cache=[];
     document.getElementById('userBtn').textContent='👤 --';
-    document.getElementById('userOverlay').style.display='flex';
+    showLoginOverlay();
     setLoginErr('');
     document.getElementById('loginEmail').value='';
     document.getElementById('loginPass').value='';
@@ -1408,12 +1424,12 @@ if(_firebaseOK && _auth){
       // Era sesión anónima vieja — cerrarla y pedir login
       _auth.signOut().then(function(){
         setSyncBadge('off');
-        document.getElementById('userOverlay').style.display='flex';
+        showLoginOverlay();
       });
     } else {
       // Sin sesión — mostrar login
       setSyncBadge('off');
-      document.getElementById('userOverlay').style.display='flex';
+      showLoginOverlay();
     }
   });
 } else {
@@ -1421,7 +1437,7 @@ if(_firebaseOK && _auth){
   setSyncBadge('local');
   try{_cache=JSON.parse(localStorage.getItem('j_regs')||'[]');}catch(e){_cache=[];}
   if(!_cache.length) preloadBRF();
-  document.getElementById('userOverlay').style.display='none';
+  hideLoginOverlay();
   renderAll(); simSetDay(0); appInit();
 }
 
