@@ -185,6 +185,18 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   <button class="nav-tab hi" onclick="nav('importar')">Importar BRF</button>
 </nav>
 
+<!-- LOGOUT MODAL -->
+<div id="logoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1001;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:14px;padding:24px;width:min(320px,88vw);text-align:center">
+    <div style="font-family:var(--mono);font-size:13px;color:var(--tx2);margin-bottom:6px">Sesión activa</div>
+    <div id="logoutEmail" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--tx);margin-bottom:20px"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="logoutConfirm()" style="background:var(--rm);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:12px;border-radius:8px;font-family:var(--mono);font-size:12px;cursor:pointer;font-weight:700">Cerrar sesión</button>
+      <button class="btn btn-s" onclick="logoutCancel()" style="padding:12px">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="main">
 
 <!-- CARRUSEL SUGERENCIAS (visible solo antes del día 16) -->
@@ -588,7 +600,9 @@ function onLoginSuccess(user){
       _cache=local;
       fbSaveUser(user.uid,local);
     } else {
-      preloadBRF();
+      // Solo cargar datos preloaded para la cuenta principal
+      if(user.email==='edwardmalav@gmail.com') preloadBRF();
+      // Otros usuarios arrancan en cero
       fbSaveUser(user.uid,_cache);
     }
     setSyncBadge('ok');
@@ -597,21 +611,29 @@ function onLoginSuccess(user){
 }
 
 window.abrirUsuarios=function(){
-  // Mostrar opciones de cuenta para usuario logueado
   if(_currentUser){
-    if(confirm('¿Cerrar sesión de '+_currentUser.email+'?')){
-      _auth.signOut().then(function(){
-        _currentUser=null; _uid=null; _cache=[];
-        document.getElementById('userBtn').textContent='👤 --';
-        document.getElementById('userOverlay').style.display='flex';
-        setLoginErr('');
-        document.getElementById('loginEmail').value='';
-        document.getElementById('loginPass').value='';
-      });
-    }
+    document.getElementById('logoutEmail').textContent=_currentUser.email;
+    document.getElementById('logoutModal').style.display='flex';
   } else {
     document.getElementById('userOverlay').style.display='flex';
   }
+};
+
+window.logoutConfirm=function(){
+  document.getElementById('logoutModal').style.display='none';
+  _auth.signOut().then(function(){
+    _currentUser=null; _uid=null; _cache=[];
+    document.getElementById('userBtn').textContent='👤 --';
+    document.getElementById('userOverlay').style.display='flex';
+    setLoginErr('');
+    document.getElementById('loginEmail').value='';
+    document.getElementById('loginPass').value='';
+    renderAll();
+  });
+};
+
+window.logoutCancel=function(){
+  document.getElementById('logoutModal').style.display='none';
 };
 
 // ── FIREBASE ──
