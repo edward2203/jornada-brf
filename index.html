@@ -183,16 +183,36 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   <button class="nav-tab" onclick="nav('resumen')">Resumen</button>
   <button class="nav-tab" onclick="nav('ia')" style="color:var(--green)">✦ IA</button>
   <button class="nav-tab hi" onclick="nav('importar')">Importar BRF</button>
+  <button class="nav-tab" onclick="nav('admin')" style="color:#aaa">⚙ Cuenta</button>
 </nav>
 
-<!-- LOGOUT MODAL -->
-<div id="logoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1001;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:14px;padding:24px;width:min(320px,88vw);text-align:center">
-    <div style="font-family:var(--mono);font-size:13px;color:var(--tx2);margin-bottom:6px">Sesión activa</div>
-    <div id="logoutEmail" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--tx);margin-bottom:20px"></div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn" onclick="logoutConfirm()" style="background:var(--rm);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:12px;border-radius:8px;font-family:var(--mono);font-size:12px;cursor:pointer;font-weight:700">Cerrar sesión</button>
-      <button class="btn btn-s" onclick="logoutCancel()" style="padding:12px">Cancelar</button>
+<!-- ACCOUNT MODAL (reemplaza logoutModal) -->
+<div id="logoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:0;width:min(340px,92vw);overflow:hidden">
+    <!-- Header -->
+    <div style="background:var(--sur2);padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:18px;font-weight:700;color:#000" id="accountAvatar">E</div>
+      <div>
+        <div id="accountEmail" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--tx)">--</div>
+        <div id="accountUid" style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:2px">uid: --</div>
+      </div>
+      <button onclick="logoutCancel()" style="margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px">✕</button>
+    </div>
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--bdr)">
+      <div style="padding:14px 16px;border-right:1px solid var(--bdr);text-align:center">
+        <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green)" id="accountDias">0</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px">Registros</div>
+      </div>
+      <div style="padding:14px 16px;text-align:center">
+        <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--tx)" id="accountSaldo">0h00</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px">Saldo período</div>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+      <button onclick="logoutConfirm()" style="width:100%;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:13px;border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.05em">⬡ CERRAR SESIÓN</button>
+      <button onclick="logoutCancel()" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:11px;border-radius:9px;font-family:var(--mono);font-size:11px;cursor:pointer">Cancelar</button>
     </div>
   </div>
 </div>
@@ -487,6 +507,50 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   </div>
 </div>
 
+<!-- CUENTA / ADMIN -->
+<div class="panel" id="panel-admin">
+  <div class="sec-hdr"><div class="sec-title">⚙ Mi Cuenta</div></div>
+
+  <!-- Info del usuario -->
+  <div class="card">
+    <div class="card-title">Usuario activo</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div id="adminAvatar" style="width:52px;height:52px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:22px;font-weight:700;color:#000;flex-shrink:0">?</div>
+      <div>
+        <div id="adminEmail" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--tx)">No identificado</div>
+        <div id="adminUid" style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:3px;word-break:break-all">--</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="stat-box"><div class="stat-label">Registros</div><div class="stat-value" id="adminDias">0</div></div>
+      <div class="stat-box"><div class="stat-label">Período</div><div class="stat-value" id="adminPeriodo">--</div></div>
+      <div class="stat-box"><div class="stat-label">Saldo</div><div class="stat-value" id="adminSaldo">--</div></div>
+    </div>
+  </div>
+
+  <!-- Cambiar contraseña -->
+  <div class="card">
+    <div class="card-title">Cambiar contraseña</div>
+    <div id="pwdMsg" style="display:none;margin-bottom:10px;padding:8px 12px;border-radius:7px;font-family:var(--mono);font-size:11px"></div>
+    <div class="fg" style="margin-bottom:10px">
+      <label>Nueva contraseña</label>
+      <input type="password" id="newPwd" placeholder="mínimo 6 caracteres" style="font-size:13px">
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Confirmar contraseña</label>
+      <input type="password" id="newPwd2" placeholder="repite la contraseña" style="font-size:13px">
+    </div>
+    <button class="btn btn-p" onclick="cambiarPassword()" style="width:100%">Actualizar contraseña</button>
+  </div>
+
+  <!-- Cerrar sesión -->
+  <div class="card" style="border-color:rgba(255,68,68,.2)">
+    <div class="card-title" style="color:var(--red)">Sesión</div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px">Al salir volverás a la pantalla de inicio de sesión.</p>
+    <button onclick="logoutConfirm()" style="width:100%;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:13px;border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.05em">⬡ CERRAR SESIÓN</button>
+  </div>
+</div>
+
 <script>
 window.addEventListener('load', function(){
 (function(){
@@ -628,11 +692,66 @@ function onLoginSuccess(user){
 
 window.abrirUsuarios=function(){
   if(_currentUser){
-    document.getElementById('logoutEmail').textContent=_currentUser.email;
+    fillAccountModal();
     document.getElementById('logoutModal').style.display='flex';
   } else {
     showLoginOverlay();
   }
+};
+
+function fillAccountModal(){
+  if(!_currentUser) return;
+  var email=_currentUser.email||'--';
+  var letra=email[0].toUpperCase();
+  document.getElementById('accountAvatar').textContent=letra;
+  document.getElementById('accountEmail').textContent=email;
+  document.getElementById('accountUid').textContent='uid: '+(_currentUser.uid||'--').slice(0,20)+'...';
+  var data=withSaldo(gd().map(enrichReg));
+  var p=getPeriod(todayStr());
+  var periodo=data.filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
+  var sal=periodo.length?periodo[periodo.length-1]._saldo:0;
+  document.getElementById('accountDias').textContent=periodo.length;
+  document.getElementById('accountSaldo').textContent=(sal>=0?'+':'')+fmMin(sal);
+}
+
+function fillAdminPanel(){
+  if(!_currentUser) return;
+  var email=_currentUser.email||'--';
+  document.getElementById('adminAvatar').textContent=email[0].toUpperCase();
+  document.getElementById('adminEmail').textContent=email;
+  document.getElementById('adminUid').textContent='UID: '+(_currentUser.uid||'--');
+  var data=withSaldo(gd().map(enrichReg));
+  var p=getPeriod(todayStr());
+  var periodo=data.filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
+  var sal=periodo.length?periodo[periodo.length-1]._saldo:0;
+  document.getElementById('adminDias').textContent=periodo.length;
+  document.getElementById('adminPeriodo').textContent=fmDate(p.start).slice(0,5)+'-'+fmDate(p.end).slice(0,5);
+  var salEl=document.getElementById('adminSaldo');
+  salEl.textContent=(sal>=0?'+':'')+fmMin(sal);
+  salEl.style.color=sal>=0?'var(--green)':'var(--red)';
+}
+
+window.cambiarPassword=function(){
+  var p1=document.getElementById('newPwd').value;
+  var p2=document.getElementById('newPwd2').value;
+  var msg=document.getElementById('pwdMsg');
+  function showMsg(txt,ok){
+    msg.textContent=txt;
+    msg.style.display='';
+    msg.style.background=ok?'rgba(0,230,118,.1)':'rgba(255,68,68,.1)';
+    msg.style.border='1px solid '+(ok?'rgba(0,230,118,.3)':'rgba(255,68,68,.3)');
+    msg.style.color=ok?'var(--green)':'var(--red)';
+  }
+  if(!p1||p1.length<6){showMsg('Mínimo 6 caracteres.',false);return;}
+  if(p1!==p2){showMsg('Las contraseñas no coinciden.',false);return;}
+  if(!_currentUser){showMsg('No hay sesión activa.',false);return;}
+  _currentUser.updatePassword(p1)
+    .then(function(){
+      showMsg('✓ Contraseña actualizada correctamente.',true);
+      document.getElementById('newPwd').value='';
+      document.getElementById('newPwd2').value='';
+    })
+    .catch(function(e){showMsg(e.message,false);});
 };
 
 window.logoutConfirm=function(){
@@ -754,6 +873,7 @@ window.nav=function(id){
   if(id==='dashboard')renderDash();
   if(id==='simulador'){calcSim();calcOut();}
   if(id==='ia'){renderIA();}
+  if(id==='admin'){fillAdminPanel();}
 };
 
 // ── ALERTS ──
