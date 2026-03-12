@@ -1400,13 +1400,18 @@ function appInit(){
 renderAll(); simSetDay(0); appInit();
 
 if(_firebaseOK && _auth){
-  // Verificar si ya hay sesión activa
   _auth.onAuthStateChanged(function(user){
-    if(user){
-      // Ya estaba logueado
+    if(user && user.email){
+      // Sesión válida con email/contraseña
       onLoginSuccess(user);
+    } else if(user && user.isAnonymous){
+      // Era sesión anónima vieja — cerrarla y pedir login
+      _auth.signOut().then(function(){
+        setSyncBadge('off');
+        document.getElementById('userOverlay').style.display='flex';
+      });
     } else {
-      // Mostrar pantalla de login
+      // Sin sesión — mostrar login
       setSyncBadge('off');
       document.getElementById('userOverlay').style.display='flex';
     }
