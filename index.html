@@ -998,27 +998,194 @@ function renderDash(){
     tag.textContent='= EQUILIBRADO'; tag.className='saldo-tag pos';
     det.textContent='Saldo exacto en cero';
   }
-  // Resumen simplificado
+  // Resumen con opciones flexibles
   var resEl=document.getElementById('dashResumen');
   resEl.style.display='';
-  var diasRest=Math.max(0,Math.ceil((new Date(p.end)-new Date(t))/86400000));
+  var diasRest=Math.max(0,Math.ceil((new Date(p.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000));
+  var absSal=Math.abs(sal);
+
+  // ── Horarios L06 CP (Coronel Ponciano) ──
+  // Centro→Bairro: 12:30 (come BRF), 13:00 (come casa), 14:15, 14:30, 16:10, 21:00, 23:30
+  // Bairro→Centro: 13:10, 16:20, 17:10, 22:00 (único práctico post-turno)
+  var ENTRADA_NORMAL = 14*60;      // 14:00
+  var SALIDA_NORMAL  = 22*60+20;   // 22:20
+  var BUS_IDA   = [12*60+30, 13*60, 14*60+15, 14*60+30, 16*60+10, 21*60, 23*60+30];
+  var BUS_VUELTA= [13*60+10, 16*60+20, 17*60+10, 22*60];
+
+  // Opciones reales de entrar tarde según buses disponibles
+  // 14:15 → llega ~14:50 → 50min tarde | 14:30 → llega ~15:00 → 60min tarde
+  var BUS_TARDE = [
+    {bus: 14*60+15, llegada: 14*60+50, tardeMin: 50,  label: 'Bus 14:15 → llega ~14:50 (+50min)'},
+    {bus: 14*60+30, llegada: 15*60,    tardeMin: 60,  label: 'Bus 14:30 → llega ~15:00 (+1h)'}
+  ];
+
+  // Encuentra el ônibus de vuelta más cercano DESPUÉS de una hora de salida
+  function busVuelta(salidaMin){
+    var v=BUS_VUELTA.filter(function(b){return b>=salidaMin;});
+    return v.length?v[0]:null;
+  }
+  // Encuentra el ônibus de ida más cercano ANTES de una hora de entrada (margen 30min)
+  function busIda(entradaMin){
+    var v=BUS_IDA.filter(function(b){return b<=entradaMin-10;});
+    return v.length?v[v.length-1]:null;
+  }
+  function fmHora(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+  function espera(salidaMin,busMin){return busMin!==null?Math.round(busMin-salidaMin):null;}
+
+  function optRow(icon,label,detalle,valor,color,bus){
+    var busTag=bus!==null&&bus!==undefined
+      ?'<span style="font-size:9px;background:rgba(255,180,0,.15);color:#ffb400;border-radius:4px;padding:2px 6px;margin-left:6px">🚌 '+fmHora(bus)+'</span>'
+      :'';
+    var esperaTag='';
+    if(bus!==null&&bus!==undefined){
+      var esp=bus-valor;
+      if(esp>0&&esp<=60) esperaTag='<span style="font-size:9px;color:var(--tx3)"> ('+esp+'min espera)</span>';
+      if(esp>60) esperaTag='<span style="font-size:9px;color:var(--red)"> ('+Math.floor(esp/60)+'h'+esp%60+'min espera)</span>';
+    }
+    return '<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between">'
+      +'<span style="color:var(--tx2);font-size:11px">'+icon+' '+label+'</span>'
+      +'<strong style="color:'+color+';font-size:13px">'+detalle+'</strong>'
+      +'</div>'
+      +(busTag||esperaTag?'<div style="text-align:right;margin-top:2px">'+busTag+esperaTag+'</div>':'')
+      +'</div>';
+  }
+
   if(sal>=0){
-    resEl.style.background='rgba(0,230,118,.07)';
+    resEl.style.background='rgba(0,230,118,.05)';
     resEl.style.border='1px solid rgba(0,230,118,.2)';
-    resEl.style.color='var(--tx)';
-    resEl.innerHTML='<span style="color:var(--green);font-size:15px;font-weight:700">✓ Estás al día</span><br>'
-      +'Extras acumuladas: <strong style="color:var(--green)">'+fmMin(sal)+'</strong><br>'
-      +'Días restantes en período: <strong>'+diasRest+'</strong><br>'
-      +(sal>0?'Podrías salir <strong style="color:var(--green)">'+fmMin(Math.round(sal/Math.max(diasRest,1)))+'</strong> antes por día':'Saldo en cero — seguí así');
+    resEl.style.padding='14px 16px';
+    resEl.style.lineHeight='1.4';
+    var opts='';
+
+    if(diasRest===0){
+      opts='<div style="color:var(--tx2);font-size:11px;padding:6px 0">Período cerrado con <strong style="color:var(--green)">+'+fmMin(sal)+'</strong> a favor ✓</div>';
+    } else {
+      var salMin=sal;
+      var xDia=Math.floor(salMin/diasRest);
+      var diasLibres=Math.floor(salMin/JORNADA_MIN);
+
+      // Opción A: Salir antes — calcular cuánto y qué ônibus alcanza
+      var salidaAntesMin = SALIDA_NORMAL - xDia;
+      var busVueltaA = busVuelta(salidaAntesMin);
+      var espA = busVueltaA!==null ? espera(salidaAntesMin, busVueltaA) : null;
+      // Si la espera es demasiado larga, ajustar salida al bus anterior disponible
+      var busAnterior = BUS_VUELTA.filter(function(b){return b<SALIDA_NORMAL;});
+      busAnterior = busAnterior.length?busAnterior[busAnterior.length-1]:null;
+      var salParaBusAnterior = busAnterior!==null ? salMin-(SALIDA_NORMAL-busAnterior) : null;
+
+      // Opción B: Entrar tarde — qué bus tomar
+      var entradaTardeMin = ENTRADA_NORMAL + xDia;
+      var busIdaB = busIda(entradaTardeMin);
+
+      // Opción C: mitad/mitad
+      var mitad = Math.floor(salMin/2);
+      var xDiaMitad = Math.floor(mitad/diasRest);
+      var entradaMitadMin = ENTRADA_NORMAL + xDiaMitad;
+      var salidaMitadMin  = SALIDA_NORMAL  - xDiaMitad;
+      var busIdaC   = busIda(entradaMitadMin);
+      var busVueltaC= busVuelta(salidaMitadMin);
+
+      opts += optRow('🕐','Salir antes cada día',
+        fmHora(salidaAntesMin)+' (−'+fmMin(xDia)+')',
+        'var(--green)', busVueltaA, busVueltaA);
+
+      // Si hay un bus anterior que aprovechar mejor
+      if(busAnterior && busAnterior < SALIDA_NORMAL && salParaBusAnterior && salParaBusAnterior <= salMin){
+        var salidaParaBus = SALIDA_NORMAL - (SALIDA_NORMAL - busAnterior);
+        opts += optRow('🚌','Alcanzar bus '+fmHora(busAnterior),
+          'Salir a las '+fmHora(busAnterior)+' (−'+fmMin(SALIDA_NORMAL-busAnterior)+')',
+          '#ffb400', busAnterior, null);
+      }
+
+      // Opciones reales de entrar tarde según buses disponibles
+      BUS_TARDE.forEach(function(bt){
+        if(bt.tardeMin <= salMin){
+          var saldoRestante = salMin - bt.tardeMin;
+          opts += optRow('⏰', bt.label,
+            '−'+fmMin(bt.tardeMin)+' del saldo · sobran '+fmMin(saldoRestante),
+            'var(--green)', null, null);
+        }
+      });
+
+      opts += optRow('⚖','Mitad/mitad por día',
+        'Entrada '+fmHora(entradaMitadMin)+' · Salida '+fmHora(salidaMitadMin),
+        '#7eb8ff', busIdaC, busIdaC);
+
+      if(diasLibres>=1){
+        opts += optRow('🏖','Días completos libres',
+          diasLibres+' día'+(diasLibres>1?'s':'')+' libre'+(diasLibres>1?'s':''),
+          '#ffb400', null, null);
+      }
+
+      if(salMin>=JORNADA_MIN){
+        opts += optRow('😴','1 día libre + resto normal',
+          'Libre 1 día · sobran '+fmMin(salMin-JORNADA_MIN),
+          '#c084fc', null, null);
+      }
+    }
+
+    resEl.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      +'<span style="color:var(--green);font-size:14px;font-weight:700">✓ Estás al día</span>'
+      +'<span style="font-family:var(--mono);font-size:11px;background:rgba(0,230,118,.15);color:var(--green);padding:3px 10px;border-radius:12px">+'+fmMin(sal)+'</span>'
+      +'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">'+diasRest+' día'+(diasRest!==1?'s':'')+' restante'+(diasRest!==1?'s':'')+' · opciones con ônibus L06 CP</div>'
+      +opts;
+
   } else {
-    var minXDia=diasRest>0?Math.ceil(Math.abs(sal)/diasRest):Math.abs(sal);
-    resEl.style.background='rgba(255,68,68,.07)';
+    // Saldo negativo
+    resEl.style.background='rgba(255,68,68,.05)';
     resEl.style.border='1px solid rgba(255,68,68,.2)';
-    resEl.style.color='var(--tx)';
-    resEl.innerHTML='<span style="color:var(--red);font-size:15px;font-weight:700">⚠ Tenés horas pendientes</span><br>'
-      +'Debés: <strong style="color:var(--red)">'+fmMin(Math.abs(sal))+'</strong><br>'
-      +'Días restantes: <strong>'+diasRest+'</strong><br>'
-      +(diasRest>0?'Para cubrir: quedá <strong style="color:var(--amb)">+'+fmMin(minXDia)+'</strong> extra por día':'Período cerrado con saldo negativo');
+    resEl.style.padding='14px 16px';
+    resEl.style.lineHeight='1.4';
+    var opts2='';
+
+    if(diasRest===0){
+      opts2='<div style="color:var(--red);font-size:11px;padding:6px 0">Período cerrado con <strong>−'+fmMin(absSal)+'</strong> negativo.</div>';
+    } else {
+      var xDiaNeg=Math.ceil(absSal/diasRest);
+
+      // Salir más tarde
+      var salidaTardeMin=SALIDA_NORMAL+xDiaNeg;
+      var busVueltaNeg=busVuelta(salidaTardeMin);
+
+      // Entrar antes
+      var entradaAntesMin=ENTRADA_NORMAL-xDiaNeg;
+      var busIdaNeg=busIda(entradaAntesMin+10); // margen
+
+      // Mitad/mitad
+      var xDiaMitadN=Math.ceil(absSal/2/diasRest);
+      var entMitN=ENTRADA_NORMAL-xDiaMitadN;
+      var salMitN=SALIDA_NORMAL+xDiaMitadN;
+      var busIdaMN=busIda(entMitN+10);
+      var busVueltaMN=busVuelta(salMitN);
+
+      opts2+=optRow('⏱','Salir más tarde cada día',
+        fmHora(salidaTardeMin)+' (+'+fmMin(xDiaNeg)+')',
+        'var(--red)', busVueltaNeg, busVueltaNeg);
+
+      opts2+=optRow('🌅','Entrar antes cada día',
+        fmHora(entradaAntesMin)+' (−'+fmMin(xDiaNeg)+')',
+        '#ffb400', busIdaNeg, busIdaNeg);
+
+      opts2+=optRow('⚖','Repartir mitad/mitad',
+        'Entrada '+fmHora(entMitN)+' · Salida '+fmHora(salMitN),
+        '#7eb8ff', busIdaMN, busIdaMN);
+
+      if(diasRest===1){
+        var salidaTodoMin=SALIDA_NORMAL+absSal;
+        opts2+=optRow('🔥','Recuperar todo mañana',
+          'Salir a las '+fmHora(salidaTodoMin%1440)+' (+'+fmMin(absSal)+')',
+          'var(--red)', busVuelta(salidaTodoMin%1440), busVuelta(salidaTodoMin%1440));
+      }
+    }
+
+    resEl.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      +'<span style="color:var(--red);font-size:14px;font-weight:700">⚠ Horas pendientes</span>'
+      +'<span style="font-family:var(--mono);font-size:11px;background:rgba(255,68,68,.15);color:var(--red);padding:3px 10px;border-radius:12px">−'+fmMin(absSal)+'</span>'
+      +'</div>'
+      +'<div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">'+diasRest+' día'+(diasRest!==1?'s':'')+' restante'+(diasRest!==1?'s':'')+' · cómo recuperarlas</div>'
+      +opts2;
   }
   document.getElementById('dashPeriod').textContent='Del '+fmDate(p.start)+' al '+fmDate(p.end);
   var totEf=data.reduce(function(a,b){return a+(b.ef||0);},0);
