@@ -187,7 +187,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   <button id="userBtn" onclick="abrirUsuarios()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap">👤 --</button>
   <div id="syncBadge" style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">⏳ conectando</div>
   <div class="period-badge" id="periodBadge">cargando...</div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--tx3)">v14.03</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--tx3)">v14.03b</div>
 </div>
 
 <nav class="nav">
@@ -1475,7 +1475,7 @@ window.setProvider=function(p){
     btnG.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)';
   }
   var hint=document.getElementById('iaChatProvider');
-  if(hint) hint.textContent='Usando '+(isGemini?'Gemini 1.5 Flash':'Claude Sonnet');
+  if(hint) hint.textContent='Usando '+(isGemini?'Gemini 1.5 Flash (v1)':'Claude Sonnet');
 };
 
 // ── LLAMADA IA UNIFICADA (reemplaza fetch directo a Claude) ──
@@ -1483,7 +1483,7 @@ async function callIA(prompt){
   if(_iaProvider==='gemini'){
     var key=getGeminiKey();
     if(!key) throw new Error('Guardá tu API Key de Gemini en ✦ IA → Proveedor de IA');
-    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+key,{
+    var res=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+key,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})
     });
@@ -1548,7 +1548,7 @@ window.readImages=function(){
     });
     parts.push({text:prompt});
 
-    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+key,{
+    fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+key,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:4000}})
     })
