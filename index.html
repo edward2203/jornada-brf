@@ -1584,13 +1584,21 @@ function appInit(){
 renderAll(); simSetDay(0); appInit();
 
 if(_firebaseOK && _auth){
-  // Cerrar sesión guardada al cargar — siempre pedir credenciales
-  _auth.signOut().then(function(){
-    showLoginOverlay();
-    setSyncBadge('off');
-  }).catch(function(){
-    showLoginOverlay();
-    setSyncBadge('off');
+  _auth.onAuthStateChanged(function(user){
+    if(user && user.email){
+      // Sesión válida con email — entrar directo sin pedir login
+      onLoginSuccess(user);
+    } else if(user && user.isAnonymous){
+      // Sesión anónima vieja — cerrar y pedir login
+      _auth.signOut().then(function(){
+        setSyncBadge('off');
+        showLoginOverlay();
+      });
+    } else {
+      // Sin sesión — mostrar login
+      setSyncBadge('off');
+      showLoginOverlay();
+    }
   });
 } else {
   // Sin Firebase — modo local puro
