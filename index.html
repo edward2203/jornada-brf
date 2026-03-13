@@ -1524,40 +1524,70 @@ window.clearImport=function(){impImgs=[];impParsed=[];renderThumbs();['impPrevie
 function stImp(html,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};document.getElementById('impStatus').style.display='';document.getElementById('impStatusTxt').innerHTML='<span style="font-family:var(--mono);font-size:12px;color:'+(co[t]||'var(--tx)')+'">'+html+'</span>';}
 
 window.readImages=function(){
-  var key=getKey();
-  if(!key){alert('Primero guarda tu API Key de Anthropic en el campo de arriba.');return;}
   if(!impImgs.length){alert('Selecciona al menos una imagen.');return;}
   var btn=document.getElementById('btnRead');
   btn.disabled=true;btn.textContent='Procesando...';
-  stImp('<span class="spin"></span>Enviando imagen a Claude...','info');
-  var content=[];
-  impImgs.forEach(function(img,i){
-    content.push({type:'image',source:{type:'base64',media_type:img.type,data:img.b64}});
-    content.push({type:'text',text:i===0?'Esta es la imagen del Espelho de Ponto de BRF S.A.':'Página '+(i+1)+' del mismo Espelho de Ponto.'});
-  });
-  content.push({type:'text',text:'Extrae TODOS los registros de la tabla de días del Espelho de Ponto.\nPara cada fila devuelve un objeto JSON con estos campos exactos:\n- dia: abreviación portuguesa (SEG,TER,QUA,QUI,SEX,SAB,DOM)\n- data: "DD/MM"\n- ano: año del encabezado "Competência"\n- e1: hora E1 "HH:MM" o null\n- s1: hora S1 "HH:MM" o null\n- e2: hora E2 "HH:MM" o null\n- s2: hora S2 "HH:MM" o null\n- intInicio: hora inicio del intervalo del header (ej "17:00") o null\n- intFim: hora fin del intervalo del header (ej "18:00") o null\n- jornadaTotal: "HH:MM" o "00:00"\n- saldoDia: string como "00:16" o "-00:07" o "00:00"\n- ocorrencia: texto o ""\n- temDados: true si E1 y S1 existen, false si es descanso\n\nIncluye TODOS los días. Responde SOLO con el JSON array, sin texto, sin backticks.'});
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:content}]})
-  })
-  .then(function(res){
-    if(!res.ok)return res.json().then(function(e){throw new Error(e.error&&e.error.message?e.error.message:'HTTP '+res.status);});
-    return res.json();
-  })
-  .then(function(dat){
-    var txt=dat.content.map(function(b){return b.text||'';}).join('').replace(/```json|```/g,'').trim();
-    impParsed=JSON.parse(txt);
-    stImp('OK: Extraídas '+impParsed.length+' filas. Revisa y confirma.','ok');
-    renderImpPreview();
-  })
-  .catch(function(err){
-    stImp('Error: '+err.message,'error');
-  })
-  .finally(function(){
-    btn.disabled=false;btn.textContent='Leer con IA';
-  });
+  var prompt='Extrae TODOS los registros de la tabla de días del Espelho de Ponto de BRF S.A.\nPara cada fila devuelve un objeto JSON con estos campos exactos:\n- dia: abreviación portuguesa (SEG,TER,QUA,QUI,SEX,SAB,DOM)\n- data: "DD/MM"\n- ano: año del encabezado "Competência"\n- e1: hora E1 "HH:MM" o null\n- s1: hora S1 "HH:MM" o null\n- e2: hora E2 "HH:MM" o null\n- s2: hora S2 "HH:MM" o null\n- intInicio: hora inicio del intervalo del header (ej "17:00") o null\n- intFim: hora fin del intervalo del header (ej "18:00") o null\n- jornadaTotal: "HH:MM" o "00:00"\n- saldoDia: string como "00:16" o "-00:07" o "00:00"\n- ocorrencia: texto o ""\n- temDados: true si E1 y S1 existen, false si es descanso\n\nIncluye TODOS los días. Responde SOLO con el JSON array, sin texto, sin backticks.';
+
+  if(_iaProvider==='gemini'){
+    var key=getGeminiKey();
+    if(!key){stImp('Guardá tu API Key de Gemini en ✦ IA → Proveedor de IA','error');btn.disabled=false;btn.textContent='Leer con IA';return;}
+    stImp('<span class="spin"></span> Enviando imagen a Gemini...','info');
+
+    // Gemini multimodal
+    var parts=[];
+    impImgs.forEach(function(img,i){
+      parts.push({inline_data:{mime_type:img.type,data:img.b64}});
+      parts.push({text:i===0?'Esta es la imagen del Espelho de Ponto de BRF S.A.':'Página '+(i+1)+' del mismo Espelho de Ponto.'});
+    });
+    parts.push({text:prompt});
+
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:4000}})
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error) throw new Error(data.error.message);
+      var txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
+      impParsed=JSON.parse(txt);
+      stImp('✓ Extraídas '+impParsed.length+' filas con Gemini. Revisa y confirma.','ok');
+      renderImpPreview();
+    })
+    .catch(function(err){stImp('Error Gemini: '+err.message,'error');})
+    .finally(function(){btn.disabled=false;btn.textContent='Leer con IA';});
+
+  } else {
+    var key=getKey();
+    if(!key){stImp('Guardá tu API Key de Claude en ✦ IA → Proveedor de IA','error');btn.disabled=false;btn.textContent='Leer con IA';return;}
+    stImp('<span class="spin"></span> Enviando imagen a Claude...','info');
+
+    var content=[];
+    impImgs.forEach(function(img,i){
+      content.push({type:'image',source:{type:'base64',media_type:img.type,data:img.b64}});
+      content.push({type:'text',text:i===0?'Esta es la imagen del Espelho de Ponto de BRF S.A.':'Página '+(i+1)+' del mismo Espelho de Ponto.'});
+    });
+    content.push({type:'text',text:prompt});
+
+    fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:content}]})
+    })
+    .then(function(res){
+      if(!res.ok)return res.json().then(function(e){throw new Error(e.error&&e.error.message?e.error.message:'HTTP '+res.status);});
+      return res.json();
+    })
+    .then(function(dat){
+      var txt=dat.content.map(function(b){return b.text||'';}).join('').replace(/```json|```/g,'').trim();
+      impParsed=JSON.parse(txt);
+      stImp('✓ Extraídas '+impParsed.length+' filas con Claude. Revisa y confirma.','ok');
+      renderImpPreview();
+    })
+    .catch(function(err){stImp('Error Claude: '+err.message,'error');})
+    .finally(function(){btn.disabled=false;btn.textContent='Leer con IA';});
+  }
 };
 
 function buildFecha(r){
