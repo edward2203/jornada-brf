@@ -447,21 +447,10 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 <!-- IMPORTAR BRF -->
 <div class="panel" id="panel-importar">
   <div class="sec-hdr"><div class="sec-title">Importar Espelho de Ponto · BRF</div></div>
-
-  <div class="card">
-    <div class="card-title">API Key de Anthropic (Claude)</div>
-    <p style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.7">
-      La lectura de imagen usa IA (Claude). Obtén tu clave en <strong style="color:var(--tx)">console.anthropic.com</strong>
-      y guardala aqui. Se almacena solo en tu navegador.<br>
-      <strong style="color:var(--amb)">IMPORTANTE: Abre este archivo en Chrome o Firefox. El navegador interno de WhatsApp no funciona.</strong>
-    </p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <input type="password" id="apiKey" placeholder="sk-ant-api03-..."
-        style="flex:1;min-width:180px;background:var(--sur2);border:1px solid var(--bdr);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none">
-      <button class="btn btn-p" onclick="saveKey()">Guardar</button>
-      <button class="btn btn-s" onclick="clearKey()">Borrar</button>
+  <div class="card" style="border-color:rgba(255,180,0,.2)">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);line-height:1.7">
+      💡 La API Key de IA se configura en el panel <strong style="color:var(--green)">✦ IA → Proveedor de IA</strong>
     </div>
-    <div id="keyStatus" style="font-family:var(--mono);font-size:10px;margin-top:6px;color:var(--tx2)"></div>
   </div>
 
   <div class="card">
@@ -520,6 +509,48 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 <div class="panel" id="panel-ia">
   <div class="sec-hdr"><div class="sec-title">✦ Asistente IA</div></div>
 
+  <!-- CONFIGURACIÓN IA -->
+  <div class="card">
+    <div class="card-title">Proveedor de IA</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="btnProvClaude" onclick="setProvider('claude')"
+        style="flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--green);background:rgba(0,230,118,.1);color:var(--green)">
+        ✦ Claude
+      </button>
+      <button id="btnProvGemini" onclick="setProvider('gemini')"
+        style="flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)">
+        ✦ Gemini
+      </button>
+    </div>
+
+    <!-- Claude key -->
+    <div id="claudeKeySection">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">API Key de Anthropic</div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..."
+          style="flex:1;background:var(--sur2);border:1px solid var(--bdr);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none">
+        <button class="btn btn-p" onclick="saveKey()">Guardar</button>
+        <button class="btn btn-s" onclick="clearKey()">✕</button>
+      </div>
+      <div id="keyStatus" style="font-family:var(--mono);font-size:10px;margin-top:6px;color:var(--tx2)"></div>
+    </div>
+
+    <!-- Gemini key -->
+    <div id="geminiKeySection" style="display:none">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">API Key de Google Gemini</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:8px;line-height:1.6">
+        Obtén tu clave gratis en <strong style="color:var(--tx)">aistudio.google.com</strong>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="geminiKey" placeholder="AIzaSy..."
+          style="flex:1;background:var(--sur2);border:1px solid var(--bdr);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none">
+        <button class="btn btn-p" onclick="saveGeminiKey()">Guardar</button>
+        <button class="btn btn-s" onclick="clearGeminiKey()">✕</button>
+      </div>
+      <div id="geminiKeyStatus" style="font-family:var(--mono);font-size:10px;margin-top:6px;color:var(--tx2)"></div>
+    </div>
+  </div>
+
   <!-- PREDICCIÓN -->
   <div class="card" id="iaPrediccion">
     <div class="card-title">Predicción para hoy</div>
@@ -551,7 +582,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
         onkeydown="if(event.key==='Enter')iaChatEnviar()">
       <button class="btn btn-p" onclick="iaChatEnviar()" id="btnChat" style="padding:10px 16px">▶</button>
     </div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:6px">Usa la API Key de Claude guardada en Importar BRF</div>
+    <div id="iaChatProvider" style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:6px">Usando Claude</div>
   </div>
 </div>
 
@@ -1402,11 +1433,71 @@ window.saveKey=function(){
   if(k.indexOf('sk-ant')<0){stKey('La clave debe empezar con sk-ant','warn');return;}
   localStorage.setItem('brf_key',k);
   document.getElementById('apiKey').value='';
-  stKey('API Key guardada correctamente','ok');
+  stKey('✓ API Key de Claude guardada','ok');
 };
 window.clearKey=function(){localStorage.removeItem('brf_key');document.getElementById('apiKey').value='';stKey('Eliminada','info');};
 function getKey(){return localStorage.getItem('brf_key')||'';}
-function stKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};var el=document.getElementById('keyStatus');el.style.color=co[t]||'var(--tx2)';el.textContent=m;}
+function stKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};var el=document.getElementById('keyStatus');if(el){el.style.color=co[t]||'var(--tx2)';el.textContent=m;}}
+
+// ── GEMINI KEY ──
+window.saveGeminiKey=function(){
+  var k=document.getElementById('geminiKey').value.trim();
+  if(!k||k.length<10){stGeminiKey('Clave inválida','warn');return;}
+  localStorage.setItem('gemini_key',k);
+  document.getElementById('geminiKey').value='';
+  stGeminiKey('✓ API Key de Gemini guardada','ok');
+};
+window.clearGeminiKey=function(){localStorage.removeItem('gemini_key');document.getElementById('geminiKey').value='';stGeminiKey('Eliminada','info');};
+function getGeminiKey(){return localStorage.getItem('gemini_key')||'';}
+function stGeminiKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};var el=document.getElementById('geminiKeyStatus');if(el){el.style.color=co[t]||'var(--tx2)';el.textContent=m;}}
+
+// ── PROVEEDOR IA ──
+var _iaProvider=localStorage.getItem('ia_provider')||'claude';
+
+window.setProvider=function(p){
+  _iaProvider=p;
+  localStorage.setItem('ia_provider',p);
+  var isGemini=p==='gemini';
+  document.getElementById('claudeKeySection').style.display=isGemini?'none':'';
+  document.getElementById('geminiKeySection').style.display=isGemini?'':'none';
+  var btnC=document.getElementById('btnProvClaude');
+  var btnG=document.getElementById('btnProvGemini');
+  if(isGemini){
+    btnG.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid #4285f4;background:rgba(66,133,244,.1);color:#4285f4';
+    btnC.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)';
+  } else {
+    btnC.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--green);background:rgba(0,230,118,.1);color:var(--green)';
+    btnG.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)';
+  }
+  var hint=document.getElementById('iaChatProvider');
+  if(hint) hint.textContent='Usando '+(isGemini?'Gemini 2.0 Flash':'Claude Sonnet');
+};
+
+// ── LLAMADA IA UNIFICADA (reemplaza fetch directo a Claude) ──
+async function callIA(prompt){
+  if(_iaProvider==='gemini'){
+    var key=getGeminiKey();
+    if(!key) throw new Error('Guardá tu API Key de Gemini en ✦ IA → Proveedor de IA');
+    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})
+    });
+    var data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    return data.candidates[0].content.parts[0].text;
+  } else {
+    var key=getKey();
+    if(!key) throw new Error('Guardá tu API Key de Claude en ✦ IA → Proveedor de IA');
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    var data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    return data.content[0].text;
+  }
+}
 
 window.onFiles=function(e){addImgs(Array.from(e.target.files));e.target.value='';};
 window.onDrop=function(e){e.preventDefault();document.getElementById('upZone').classList.remove('drag');addImgs(Array.from(e.dataTransfer.files).filter(function(f){return f.type.indexOf('image/')===0;}));};
@@ -1580,71 +1671,43 @@ window.iaChatEnviar=function(){
   var input=document.getElementById('iaChatInput');
   var msg=input.value.trim();
   if(!msg)return;
-  var key=getKey();
-  if(!key){alert('Primero guarda tu API Key en la pestaña Importar BRF.');return;}
   input.value='';
-  // Mostrar mensaje usuario
   var chat=document.getElementById('iaChat');
   chat.innerHTML+='<div style="align-self:flex-end;background:var(--sur3);border-radius:10px 10px 2px 10px;padding:10px 14px;max-width:85%;font-family:var(--mono);font-size:12px;color:var(--tx)">'+msg+'</div>';
   chat.innerHTML+='<div id="iaChatTyping" style="align-self:flex-start;background:var(--sur2);border-radius:10px 10px 10px 2px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--tx2)">⟳ pensando...</div>';
   chat.scrollTop=chat.scrollHeight;
   document.getElementById('btnChat').disabled=true;
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:600,
-      system:'Eres un asistente experto en jornadas laborales CLT de Brasil para un trabajador de BRF S.A. Respondes en español, de forma directa y concisa. Tienes acceso a todos los datos de jornada del usuario. No uses markdown, solo texto plano.',
-      messages:[{role:'user',content:iaContexto()+'\n\nPREGUNTA DEL TRABAJADOR: '+msg}]
+  var prompt='Eres un asistente experto en jornadas laborales CLT de Brasil para un trabajador de BRF S.A. Respondes en español, de forma directa y concisa. No uses markdown, solo texto plano.\n\n'
+    +iaContexto()+'\n\nPREGUNTA: '+msg;
+
+  callIA(prompt)
+    .then(function(resp){
+      var typing=document.getElementById('iaChatTyping');
+      if(typing)typing.remove();
+      chat.innerHTML+='<div style="align-self:flex-start;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.15);border-radius:10px 10px 10px 2px;padding:10px 14px;max-width:92%;font-family:var(--mono);font-size:12px;color:var(--tx);line-height:1.7">'+resp.replace(/\n/g,'<br>')+'</div>';
+      chat.scrollTop=chat.scrollHeight;
     })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var typing=document.getElementById('iaChatTyping');
-    if(typing)typing.remove();
-    var resp=(d.content&&d.content[0]&&d.content[0].text)||'Sin respuesta.';
-    chat.innerHTML+='<div style="align-self:flex-start;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.15);border-radius:10px 10px 10px 2px;padding:10px 14px;max-width:92%;font-family:var(--mono);font-size:12px;color:var(--tx);line-height:1.7">'+resp.replace(/\n/g,'<br>')+'</div>';
-    chat.scrollTop=chat.scrollHeight;
-    document.getElementById('btnChat').disabled=false;
-  })
-  .catch(function(e){
-    var typing=document.getElementById('iaChatTyping');
-    if(typing)typing.textContent='Error: '+e.message;
-    document.getElementById('btnChat').disabled=false;
-  });
-}
+    .catch(function(e){
+      var typing=document.getElementById('iaChatTyping');
+      if(typing)typing.textContent='Error: '+e.message;
+    })
+    .finally(function(){document.getElementById('btnChat').disabled=false;});
+};
 
 window.iaAnalizar=function(){
-  var key=getKey();
-  if(!key){alert('Primero guarda tu API Key en la pestaña Importar BRF.');return;}
   var btn=document.getElementById('btnAnalizar');
   btn.disabled=true; btn.textContent='Analizando...';
   document.getElementById('iaAnalisis').textContent='⟳ Generando análisis...';
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:800,
-      system:'Eres un asesor de jornada laboral CLT Brasil. Analizas datos de ponto y das recomendaciones concretas en español, sin markdown, texto plano.',
-      messages:[{role:'user',content:iaContexto()+'\n\nHaz un análisis completo del período: tendencias, días con más extras, promedio de entrada/salida, proyección del saldo al cierre, y 3 recomendaciones concretas para optimizar la jornada restante.'}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var resp=(d.content&&d.content[0]&&d.content[0].text)||'Sin respuesta.';
-    document.getElementById('iaAnalisis').textContent=resp;
-    btn.disabled=false; btn.textContent='Analizar con IA';
-  })
-  .catch(function(e){
-    document.getElementById('iaAnalisis').textContent='Error: '+e.message;
-    btn.disabled=false; btn.textContent='Analizar con IA';
-  });
-};
+  var prompt='Eres un asesor de jornada laboral CLT Brasil. Analizas datos de ponto y das recomendaciones concretas en español, sin markdown, texto plano.\n\n'
+    +iaContexto()+'\n\nHaz un análisis completo del período: tendencias, días con más extras, promedio de entrada/salida, proyección del saldo al cierre, y 3 recomendaciones concretas para optimizar la jornada restante.';
 
+  callIA(prompt)
+    .then(function(resp){document.getElementById('iaAnalisis').textContent=resp;})
+    .catch(function(e){document.getElementById('iaAnalisis').textContent='Error: '+e.message;})
+    .finally(function(){btn.disabled=false;btn.textContent='Analizar con IA';});
+};
 function iaPrediccion(){
   var data=gd().sort(function(a,b){return a.fecha>b.fecha?1:-1;});
   var conEntrada=data.filter(function(r){return r.entrada&&r.salida;});
@@ -1753,7 +1816,9 @@ function preloadBRF(){
 function appInit(){
   document.getElementById('rFecha').value=todayStr();
   calcOut();
-  var k=getKey();if(k)stKey('API Key guardada ('+k.slice(0,12)+'...)','ok');
+  var k=getKey();if(k)stKey('✓ Claude key guardada ('+k.slice(0,12)+'...)','ok');
+  var gk=getGeminiKey();if(gk)stGeminiKey('✓ Gemini key guardada','ok');
+  setProvider(_iaProvider);
 }
 
 function hideAuthLoading(){
