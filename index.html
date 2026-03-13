@@ -305,6 +305,22 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div id="dashResumen" style="margin-top:14px;border-radius:10px;padding:12px 16px;font-family:var(--mono);font-size:13px;text-align:left;line-height:2;display:none"></div>
     <div class="saldo-period" id="dashPeriod">--</div>
   </div>
+
+  <!-- SELECTOR SÁBADO -->
+  <div id="sabadoSelector" style="display:none;margin-bottom:16px">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🗓 Este sábado</div>
+    <div style="display:flex;gap:8px">
+      <button id="btnSabAbate" onclick="setSabado('abate')"
+        style="flex:1;padding:10px 6px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--green);background:rgba(0,230,118,.1);color:var(--green)">
+        🐔 Con abate
+      </button>
+      <button id="btnSabSinAbate" onclick="setSabado('sin')"
+        style="flex:1;padding:10px 6px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)">
+        🔧 Sin abate
+      </button>
+    </div>
+    <div id="sabadoInfo" style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:6px;text-align:center"></div>
+  </div>
   <div class="stat-grid">
     <div class="stat-box"><div class="stat-label">Días</div><div class="stat-value" id="dDias">0</div></div>
     <div class="stat-box"><div class="stat-label">Trabajado</div><div class="stat-value" id="dTrab">0h00</div></div>
@@ -1101,63 +1117,55 @@ function renderDash(){
       var xDia=Math.floor(salMin/diasRest);
       var diasLibres=Math.floor(salMin/JORNADA_MIN);
 
-      // Opción A: Salir antes — calcular cuánto y qué ônibus alcanza
-      var salidaAntesMin = SALIDA_NORMAL - xDia;
-      var busVueltaA = busVuelta(salidaAntesMin);
-      var espA = busVueltaA!==null ? espera(salidaAntesMin, busVueltaA) : null;
-      // Si la espera es demasiado larga, ajustar salida al bus anterior disponible
-      var busAnterior = BUS_VUELTA.filter(function(b){return b<SALIDA_NORMAL;});
-      busAnterior = busAnterior.length?busAnterior[busAnterior.length-1]:null;
-      var salParaBusAnterior = busAnterior!==null ? salMin-(SALIDA_NORMAL-busAnterior) : null;
+      // ── SÁBADO: adaptar según tipo ──
+      var SAB_SALIDA_NORMAL = _sabadoTipo==='sin' ? 21*60+30 : SALIDA_NORMAL; // sin abate ~21:30, con abate 22:20
+      var sabLabel = _sabadoTipo==='sin'
+        ? '🚕 Sábado sin abate (taxi · salida flexible)'
+        : '🐔 Sábado con abate (bus 22:00 fijo)';
+      var sabColor = _sabadoTipo==='sin' ? '#ffb400' : 'var(--green)';
+      var sabBg = _sabadoTipo==='sin' ? 'rgba(255,180,0,.08)' : 'rgba(0,230,118,.05)';
+      var sabBorder = _sabadoTipo==='sin' ? 'rgba(255,180,0,.2)' : 'rgba(0,230,118,.2)';
 
-      // Opción B: Entrar tarde — qué bus tomar
-      var entradaTardeMin = ENTRADA_NORMAL + xDia;
-      var busIdaB = busIda(entradaTardeMin);
-
-      // Opción C: mitad/mitad
-      var mitad = Math.floor(salMin/2);
-      var xDiaMitad = Math.floor(mitad/diasRest);
-      var entradaMitadMin = ENTRADA_NORMAL + xDiaMitad;
-      var salidaMitadMin  = SALIDA_NORMAL  - xDiaMitad;
-      var busIdaC   = busIda(entradaMitadMin);
-      var busVueltaC= busVuelta(salidaMitadMin);
-
-      opts += optRow('🕐','Salir antes cada día',
-        fmHora(salidaAntesMin)+' (−'+fmMin(xDia)+')',
-        'var(--green)', busVueltaA, busVueltaA);
-
-      // Si hay un bus anterior que aprovechar mejor
-      if(busAnterior && busAnterior < SALIDA_NORMAL && salParaBusAnterior && salParaBusAnterior <= salMin){
-        var salidaParaBus = SALIDA_NORMAL - (SALIDA_NORMAL - busAnterior);
-        opts += optRow('🚌','Alcanzar bus '+fmHora(busAnterior),
-          'Salir a las '+fmHora(busAnterior)+' (−'+fmMin(SALIDA_NORMAL-busAnterior)+')',
-          '#ffb400', busAnterior, null);
+      var sabOpts='';
+      if(_sabadoTipo==='sin'){
+        // Sin abate: sugerir horas reales de salida anticipada
+        var opcSab=[
+          {hora:19*60, label:'Salir 19:00'},
+          {hora:18*60, label:'Salir 18:00'},
+          {hora:17*60, label:'Salir 17:00'},
+          {hora:16*60, label:'Salir 16:00'}
+        ];
+        opcSab.forEach(function(op){
+          var uso=SAB_SALIDA_NORMAL-op.hora;
+          if(uso>0 && uso<=salMin){
+            var sobra=salMin-uso;
+            sabOpts+=optRow(op.hora<=17*60?'🌞':'🌆', op.label,
+              'Usa '+fmMin(uso)+' · sobran '+fmMin(sobra), sabColor, null, null);
+          }
+        });
+        if(!sabOpts) sabOpts='<div style="font-family:var(--mono);font-size:11px;color:var(--tx3);padding:4px 0">Saldo insuficiente para salir antes del horario normal</div>';
+      } else {
+        // Con abate: bus 22:00 fijo, usar extras para llegar tarde
+        sabOpts='<div style="font-family:var(--mono);font-size:11px;color:var(--tx3);padding:4px 0">Bus 22:00 fijo — no se puede salir antes ni después</div>';
+        BUS_TARDE.forEach(function(bt){
+          if(bt.tardeMin <= salMin){
+            sabOpts+=optRow('⏰', bt.label,
+              '−'+fmMin(bt.tardeMin)+' del saldo · sobran '+fmMin(salMin-bt.tardeMin),
+              'var(--green)', null, null);
+          }
+        });
       }
 
-      // Opciones reales de entrar tarde según buses disponibles
-      BUS_TARDE.forEach(function(bt){
-        if(bt.tardeMin <= salMin){
-          var saldoRestante = salMin - bt.tardeMin;
-          opts += optRow('⏰', bt.label,
-            '−'+fmMin(bt.tardeMin)+' del saldo · sobran '+fmMin(saldoRestante),
-            'var(--green)', null, null);
-        }
-      });
+      opts += '<div style="background:'+sabBg+';border:1px solid '+sabBorder+';border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+        +'<div style="font-family:var(--mono);font-size:10px;color:'+sabColor+';font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">'+sabLabel+'</div>'
+        +sabOpts
+        +'</div>';
 
-      opts += optRow('⚖','Mitad/mitad por día',
-        'Entrada '+fmHora(entradaMitadMin)+' · Salida '+fmHora(salidaMitadMin),
-        '#7eb8ff', busIdaC, busIdaC);
-
+      // Entre semana extras
       if(diasLibres>=1){
         opts += optRow('🏖','Días completos libres',
           diasLibres+' día'+(diasLibres>1?'s':'')+' libre'+(diasLibres>1?'s':''),
           '#ffb400', null, null);
-      }
-
-      if(salMin>=JORNADA_MIN){
-        opts += optRow('😴','1 día libre + resto normal',
-          'Libre 1 día · sobran '+fmMin(salMin-JORNADA_MIN),
-          '#c084fc', null, null);
       }
     }
 
@@ -1179,41 +1187,45 @@ function renderDash(){
     if(diasRest===0){
       opts2='<div style="color:var(--red);font-size:11px;padding:6px 0">Período cerrado con <strong>−'+fmMin(absSal)+'</strong> negativo.</div>';
     } else {
-      var xDiaNeg=Math.ceil(absSal/diasRest);
+      // REGLA: nunca sugerir salir después de 22:00
+      // Estrategia: acumular ocasionalmente, no necesariamente todos los días
 
-      // Salir más tarde
-      var salidaTardeMin=SALIDA_NORMAL+xDiaNeg;
-      var busVueltaNeg=busVuelta(salidaTardeMin);
+      // Cuánto ganás por cada día que tomás bus 12:30 (llega ~13:05 = +55min)
+      var GANANCIA_BUS1230 = 55; // minutos extra vs entrada normal 14:00
+      // Sábados: trabajo hasta 21:30 en vez de 22:20 = -50min vs normal
+      // Pero si entran a las 13:05 = +55min → sábado con bus 12:30 = +55min neto
+      var GANANCIA_SAB = 55; // si tomás bus 12:30 el sábado
 
-      // Entrar antes
-      var entradaAntesMin=ENTRADA_NORMAL-xDiaNeg;
-      var busIdaNeg=busIda(entradaAntesMin+10); // margen
+      // Cuántos días estratégicos necesitás
+      var diasConBus1230 = Math.ceil(absSal / GANANCIA_BUS1230);
+      // Cuánto cubre 1 solo sábado con bus 12:30
+      var unSabado = GANANCIA_BUS1230;
 
-      // Mitad/mitad
-      var xDiaMitadN=Math.ceil(absSal/2/diasRest);
-      var entMitN=ENTRADA_NORMAL-xDiaMitadN;
-      var salMitN=SALIDA_NORMAL+xDiaMitadN;
-      var busIdaMN=busIda(entMitN+10);
-      var busVueltaMN=busVuelta(salMitN);
+      opts2+='<div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Estrategia para recuperar −'+fmMin(absSal)+'</div>';
 
-      opts2+=optRow('⏱','Salir más tarde cada día',
-        fmHora(salidaTardeMin)+' (+'+fmMin(xDiaNeg)+')',
-        'var(--red)', busVueltaNeg, busVueltaNeg);
+      // Opción principal: bus 12:30 en días seleccionados
+      opts2+=optRow('🚌','Tomar bus 12:30 ocasionalmente',
+        diasConBus1230+' día'+(diasConBus1230>1?'s':'')+' (+55min c/u)',
+        '#ffb400', null, null);
+      opts2+='<div style="font-family:var(--mono);font-size:10px;color:var(--tx3);padding:2px 0 8px 0">Llegás ~13:05 → entrada 13:05 en vez de 14:00</div>';
 
-      opts2+=optRow('🌅','Entrar antes cada día',
-        fmHora(entradaAntesMin)+' (−'+fmMin(xDiaNeg)+')',
-        '#ffb400', busIdaNeg, busIdaNeg);
-
-      opts2+=optRow('⚖','Repartir mitad/mitad',
-        'Entrada '+fmHora(entMitN)+' · Salida '+fmHora(salMitN),
-        '#7eb8ff', busIdaMN, busIdaMN);
-
-      if(diasRest===1){
-        var salidaTodoMin=SALIDA_NORMAL+absSal;
-        opts2+=optRow('🔥','Recuperar todo mañana',
-          'Salir a las '+fmHora(salidaTodoMin%1440)+' (+'+fmMin(absSal)+')',
-          'var(--red)', busVuelta(salidaTodoMin%1440), busVuelta(salidaTodoMin%1440));
+      // Sábado como día estratégico
+      if(absSal<=GANANCIA_SAB){
+        opts2+=optRow('📅','1 sábado con bus 12:30 alcanza',
+          'Cubre todo el déficit de −'+fmMin(absSal),
+          'var(--green)', null, null);
+      } else {
+        var sabadosNec=Math.ceil(absSal/GANANCIA_SAB);
+        opts2+=optRow('📅','Sábados con bus 12:30',
+          sabadosNec+' sábado'+(sabadosNec>1?'s':'')+' para cubrir −'+fmMin(absSal),
+          '#7eb8ff', null, null);
       }
+
+      // Proyección si no hace nada
+      opts2+='<div style="margin-top:10px;padding:8px 10px;background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.2);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--tx2);line-height:1.6">'
+        +'⚠ <strong style="color:var(--red)">No se sugiere salir después de 22:00</strong> — ônibus fijo<br>'
+        +'💡 Aprovechá los <strong style="color:#ffb400">sábados de servicio</strong> para acumular sin alterar tu rutina diaria'
+        +'</div>';
     }
 
     resEl.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
@@ -1458,6 +1470,38 @@ function stGeminiKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var
 
 // ── PROVEEDOR IA ──
 var _iaProvider=localStorage.getItem('ia_provider')||'claude';
+
+// ── SÁBADO ──
+var _sabadoTipo = localStorage.getItem('sabado_tipo')||'abate'; // 'abate' | 'sin'
+
+window.setSabado=function(tipo){
+  _sabadoTipo=tipo;
+  localStorage.setItem('sabado_tipo',tipo);
+  var sinAbate=tipo==='sin';
+  var btnA=document.getElementById('btnSabAbate');
+  var btnS=document.getElementById('btnSabSinAbate');
+  var info=document.getElementById('sabadoInfo');
+  if(sinAbate){
+    btnS.style.border='2px solid #ffb400';btnS.style.background='rgba(255,180,0,.1)';btnS.style.color='#ffb400';
+    btnA.style.border='2px solid var(--bdr)';btnA.style.background='var(--sur2)';btnA.style.color='var(--tx2)';
+    info.textContent='Taxi de empresa · salida flexible con supervisor';
+    info.style.color='#ffb400';
+  } else {
+    btnA.style.border='2px solid var(--green)';btnA.style.background='rgba(0,230,118,.1)';btnA.style.color='var(--green)';
+    btnS.style.border='2px solid var(--bdr)';btnS.style.background='var(--sur2)';btnS.style.color='var(--tx2)';
+    info.textContent='Bus 22:00 fijo · turno normal hasta ~22:20';
+    info.style.color='var(--tx3)';
+  }
+  renderDash();
+};
+
+function initSabadoSelector(){
+  // Mostrar selector solo si hoy es miércoles, jueves, viernes o sábado
+  var dow=new Date().getDay(); // 0=dom,1=lun...6=sab
+  var el=document.getElementById('sabadoSelector');
+  if(el) el.style.display=(dow>=3||dow===0)?'':'none'; // mié a dom
+  setSabado(_sabadoTipo);
+}
 
 window.setProvider=function(p){
   _iaProvider=p;
@@ -1854,6 +1898,7 @@ function appInit(){
   var k=getKey();if(k)stKey('✓ Claude key guardada ('+k.slice(0,12)+'...)','ok');
   var gk=getGeminiKey();if(gk)stGeminiKey('✓ Gemini key guardada','ok');
   setProvider(_iaProvider);
+  initSabadoSelector();
 }
 
 function hideAuthLoading(){
