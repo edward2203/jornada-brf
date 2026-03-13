@@ -217,6 +217,44 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   </div>
 </div>
 
+<!-- MODAL REEMPLAZAR REGISTRO -->
+<div id="replaceModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:0;width:min(340px,92vw);overflow:hidden">
+    <div style="background:rgba(255,180,0,.1);border-bottom:1px solid rgba(255,180,0,.2);padding:16px 20px">
+      <div style="font-family:var(--cond);font-size:15px;font-weight:700;color:#ffb400">⚠ Ya existe un registro</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--tx2);margin-top:4px">Fecha: <span id="replaceFecha" style="color:var(--tx)"></span></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:var(--sur2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-bottom:4px;text-transform:uppercase">Registro actual</div>
+          <div id="replaceOld" style="font-family:var(--mono);font-size:12px;color:var(--tx)">--</div>
+        </div>
+        <div style="background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-bottom:4px;text-transform:uppercase">Nuevo registro</div>
+          <div id="replaceNew" style="font-family:var(--mono);font-size:12px;color:var(--green)">--</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="document.getElementById('replaceModal').style.display='none';saveReg(true);" style="width:100%;background:var(--green);border:none;color:#000;padding:13px;border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">✓ Sí, reemplazar</button>
+        <button onclick="document.getElementById('replaceModal').style.display='none';" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:11px;border-radius:9px;font-family:var(--mono);font-size:11px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR REGISTRO -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--sur);border:1px solid rgba(255,68,68,.3);border-radius:16px;padding:20px;width:min(300px,88vw);text-align:center">
+    <div style="font-family:var(--cond);font-size:16px;font-weight:700;color:var(--red);margin-bottom:8px">Eliminar registro</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:20px">Esta acción no se puede deshacer.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="window._pendingDeleteId&&(sd(gd().filter(function(x){return x.id!==window._pendingDeleteId;})),renderAll());document.getElementById('deleteModal').style.display='none';" style="width:100%;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:13px;border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">Eliminar</button>
+      <button onclick="document.getElementById('deleteModal').style.display='none';" style="width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:11px;border-radius:9px;font-family:var(--mono);font-size:11px;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="main">
 
 <!-- CARRUSEL SUGERENCIAS (visible solo antes del día 16) -->
@@ -1018,15 +1056,25 @@ function calcPrev(){
 ['rE','rS'].forEach(function(id){document.getElementById(id).addEventListener('input',calcPrev);});
 document.getElementById('rFecha').addEventListener('change',calcPrev);
 
-window.saveReg=function(){
+window.saveReg=function(forzar){
   var fecha=document.getElementById('rFecha').value,e=document.getElementById('rE').value,s=document.getElementById('rS').value,nota=document.getElementById('rNota').value,eid=document.getElementById('editId').value;
   if(!fecha||!e||!s){alert('Completa fecha, entrada y salida.');return;}
   var r=calcJ(e,s);
   var reg={id:eid||Date.now().toString(),fecha:fecha,entrada:e,salida:s,nota:nota,tot:r?r.tot:0,desc:60,ef:r?r.ef:0,delta:r?r.delta:0};
   var data=gd();
-  if(eid){data=data.map(function(x){return x.id===eid?reg:x;});}
-  else{
-    if(data.find(function(x){return x.fecha===fecha;})){if(!confirm('Ya existe registro para '+fmDate(fecha)+'. Reemplazar?'))return;data=data.filter(function(x){return x.fecha!==fecha;});}
+  if(eid){
+    data=data.map(function(x){return x.id===eid?reg:x;});
+  } else {
+    var existe=data.find(function(x){return x.fecha===fecha;});
+    if(existe && !forzar){
+      // Mostrar modal de confirmación en vez de confirm()
+      document.getElementById('replaceModal').style.display='flex';
+      document.getElementById('replaceFecha').textContent=fmDate(fecha);
+      document.getElementById('replaceOld').textContent=(existe.entrada||'--')+' → '+(existe.salida||'--');
+      document.getElementById('replaceNew').textContent=e+' → '+s;
+      return;
+    }
+    data=data.filter(function(x){return x.fecha!==fecha;});
     data.push(reg);
   }
   data.sort(function(a,b){return a.fecha>b.fecha?1:-1;});
@@ -1053,8 +1101,8 @@ window.editReg=function(id){
 };
 
 window.delReg=function(id){
-  if(!confirm('Eliminar este registro?'))return;
-  sd(gd().filter(function(x){return x.id!==id;}));renderAll();
+  window._pendingDeleteId=id;
+  document.getElementById('deleteModal').style.display='flex';
 };
 
 // ── HISTORIAL ──
