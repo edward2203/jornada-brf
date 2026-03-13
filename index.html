@@ -1474,7 +1474,7 @@ window.setProvider=function(p){
     btnG.style.cssText='flex:1;padding:10px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--bdr);background:var(--sur2);color:var(--tx2)';
   }
   var hint=document.getElementById('iaChatProvider');
-  if(hint) hint.textContent='Usando '+(isGemini?'Gemini 2.0 Flash':'Claude Sonnet');
+  if(hint) hint.textContent='Usando '+(isGemini?'Gemini 1.5 Flash':'Claude Sonnet');
 };
 
 // ── LLAMADA IA UNIFICADA (reemplaza fetch directo a Claude) ──
@@ -1482,7 +1482,7 @@ async function callIA(prompt){
   if(_iaProvider==='gemini'){
     var key=getGeminiKey();
     if(!key) throw new Error('Guardá tu API Key de Gemini en ✦ IA → Proveedor de IA');
-    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})
     });
@@ -1547,7 +1547,7 @@ window.readImages=function(){
     });
     parts.push({text:prompt});
 
-    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:4000}})
     })
