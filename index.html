@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- v2026.03.14 -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <title>Control de Jornada · BRF</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -492,8 +493,12 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div id="thumbWrap" style="display:none;margin-top:14px">
       <div id="thumbList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>
       <div class="btn-row">
-        <button class="btn btn-p" id="btnRead" onclick="readImages()">Leer con IA</button>
+        <button class="btn btn-p" id="btnRead" onclick="readImages()">✦ Leer con IA</button>
+        <button class="btn btn-s" id="btnOcr" onclick="readOCR()">📷 OCR local</button>
         <button class="btn btn-s" onclick="clearImport()">Limpiar</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:6px;line-height:1.5">
+        OCR local: no requiere API Key · funciona sin internet · puede tardar ~30s
       </div>
     </div>
   </div>
@@ -1638,6 +1643,127 @@ window.readImages=function(){
     .finally(function(){btn.disabled=false;btn.textContent='Leer con IA';});
   }
 };
+
+// ── OCR LOCAL (Tesseract.js) ──
+window.readOCR=async function(){
+  if(!impImgs.length){stImp('Selecciona al menos una imagen primero.','warn');return;}
+  if(typeof Tesseract==='undefined'){stImp('Tesseract.js no cargó. Verificá tu conexión.','error');return;}
+  var btn=document.getElementById('btnOcr');
+  btn.disabled=true; btn.textContent='Procesando...';
+  stImp('<span class="spin"></span> Leyendo imagen con OCR local... puede tardar ~30s','info');
+
+  try{
+    var fullText='';
+    for(var i=0;i<impImgs.length;i++){
+      stImp('<span class="spin"></span> Procesando página '+(i+1)+'/'+impImgs.length+'...','info');
+      var imgData='data:'+impImgs[i].type+';base64,'+impImgs[i].b64;
+      var result=await Tesseract.recognize(imgData,'por',{
+        logger:function(m){
+          if(m.status==='recognizing text'){
+            stImp('<span class="spin"></span> OCR: '+(m.progress*100).toFixed(0)+'%','info');
+          }
+        }
+      });
+      fullText+=result.data.text+'\n';
+    }
+
+    // Parsear el texto OCR buscando patrones de hora HH:MM
+    var parsed=parseOCRText(fullText);
+    if(!parsed.length){
+      stImp('OCR no encontró registros con el formato esperado. Intentá con mejor iluminación o usá IA.','warn');
+      return;
+    }
+    impParsed=parsed;
+    stImp('✓ OCR: encontrados '+parsed.length+' registros. Revisá y confirmá.','ok');
+    renderImpPreview();
+
+  }catch(e){
+    stImp('Error OCR: '+e.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent='📷 OCR local';
+  }
+};
+
+function parseOCRText(text){
+  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>3;});
+  var results=[];
+  // Buscar el año en el encabezado "Competência MM/YYYY"
+  var anoMatch=text.match(/Compet[eê]ncia[:\s]*(\d{2})\/(\d{4})/i)||text.match(/(\d{2})\/(\d{4})/);
+  var ano=anoMatch?parseInt(anoMatch[2]):new Date().getFullYear();
+
+  // Días de la semana en portugués
+  var diasPT={
+    'SEG':true,'TER':true,'QUA':true,'QUI':true,'SEX':true,'SAB':true,'SÁB':true,'DOM':true,
+    'seg':true,'ter':true,'qua':true,'qui':true,'sex':true,'sab':true,'dom':true
+  };
+  var diasNorm={'SÁB':'SAB','sab':'SAB','seg':'SEG','ter':'TER','qua':'QUA','qui':'QUI','sex':'SEX','dom':'DOM'};
+
+  var timeRe=/\b(\d{1,2}):(\d{2})\b/g;
+  var dateRe=/\b(\d{2})\/(\d{2})\b/;
+
+  lines.forEach(function(line){
+    // Buscar día de la semana
+    var diaFound=null;
+    var words=line.split(/\s+/);
+    for(var w=0;w<words.length;w++){
+      var wd=words[w].toUpperCase().replace(/[^A-ZÁÉÍÓÚÃ]/g,'');
+      if(diasPT[wd]||diasPT[wd.toLowerCase()]){diaFound=diasNorm[wd]||wd;break;}
+    }
+    if(!diaFound) return;
+
+    // Buscar fecha DD/MM
+    var dateM=line.match(dateRe);
+    if(!dateM) return;
+    var dd=dateM[1],mm=dateM[2];
+
+    // Buscar horarios
+    var times=[];
+    var tm;
+    var re=new RegExp(timeRe.source,'g');
+    while((tm=re.exec(line))!==null){
+      var h=parseInt(tm[1]),m=parseInt(tm[2]);
+      if(h>=0&&h<=23&&m>=0&&m<=59) times.push(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));
+    }
+
+    var e1=times[0]||null, s1=times[1]||null;
+    var temDados=!!(e1&&s1);
+
+    // Detectar ocurrencias comunes
+    var ocorrencia='';
+    if(/DSR|folga|FOLGA/i.test(line)) ocorrencia='DSR/Folga';
+    if(/feri|FERI/i.test(line)) ocorrencia='Feriado';
+    if(/afas|AFAS/i.test(line)) ocorrencia='Afastamento';
+
+    results.push({
+      dia:diaFound,
+      data:dd+'/'+mm,
+      ano:ano,
+      e1:e1, s1:s1,
+      e2:null, s2:null,
+      intInicio:'17:00', intFim:'18:00',
+      jornadaTotal:temDados?calcJStr(e1,s1):'00:00',
+      saldoDia:temDados?calcSaldoStr(e1,s1):'00:00',
+      ocorrencia:ocorrencia,
+      temDados:temDados
+    });
+  });
+  return results;
+}
+
+function calcJStr(e,s){
+  if(!e||!s)return'00:00';
+  var r=calcJ(e,s);
+  if(!r)return'00:00';
+  var ef=Math.abs(r.ef),h=Math.floor(ef/60),m=ef%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function calcSaldoStr(e,s){
+  if(!e||!s)return'00:00';
+  var r=calcJ(e,s);
+  if(!r)return'00:00';
+  var d=r.delta,neg=d<0,abs=Math.abs(d),h=Math.floor(abs/60),m=abs%60;
+  return(neg?'-':'')+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
 
 function buildFecha(r){
   if(!r.data)return'';
