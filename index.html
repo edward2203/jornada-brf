@@ -339,7 +339,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     </div>
     <div class="form-grid">
       <div class="fg"><label>Entrada</label><input type="time" id="rE" oninput="calcPrev()"></div>
-      <div class="fg"><label>Salida</label><input type="time" id="rS" oninput="calcPrev()"></div>
+      <div class="fg"><label>Salida <span style="color:var(--tx3);font-size:9px">(opcional)</span></label><input type="time" id="rS" oninput="calcPrev()"></div>
     </div>
     <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:14px">Descanso: 1h fija descontada automaticamente</p>
     <div class="fg" style="margin-bottom:14px"><label>Nota (opcional)</label><input type="text" id="rNota" placeholder="ej: retraso ônibus, turno especial..." style="font-size:13px"></div>
@@ -666,7 +666,10 @@ window.addEventListener('load', function(){
 function toMin(t){if(!t)return null;var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
 function fmMin(m){if(m===null||m===undefined)return'--';var n=m<0;m=Math.abs(m);return(n?'-':'')+Math.floor(m/60)+'h'+String(m%60).padStart(2,'0');}
 function to12(t){if(!t||t==='--')return'--';var p=t.split(':'),h=parseInt(p[0]),m=p[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
-function fmTime(t){return(t||'--')+' / '+to12(t);}
+function fmTime(t,pending){
+  if(!t) return pending?'<span style="color:var(--amb);font-size:10px">⏳ pendiente</span>':'--';
+  return t+' / '+to12(t);
+}
 function todayStr(){return new Date().toISOString().slice(0,10);}
 function fmDate(s){if(!s)return'--';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 
@@ -1250,7 +1253,7 @@ function renderDash(){
   var last=ws.slice().reverse().slice(0,5);
   var tb=document.getElementById('dashTbl');
   if(!last.length){tb.innerHTML='<tr><td colspan="5"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">Sin registros en el periodo actual</div></div></td></tr>';}
-  else tb.innerHTML=last.map(function(r){var c=r.delta>0?'pos':r.delta<0?'neg':'';return'<tr><td>'+fmDate(r.fecha)+'</td><td>'+fmTime(r.entrada)+'</td><td>'+fmTime(r.salida)+'</td><td>'+fmMin(r.ef)+'</td><td class="'+c+'">'+(r.delta>=0?'+':'')+fmMin(r.delta)+'</td></tr>';}).join('');
+  else tb.innerHTML=last.map(function(r){var c=r.delta>0?'pos':r.delta<0?'neg':'';return'<tr><td>'+fmDate(r.fecha)+'</td><td>'+fmTime(r.entrada)+'</td><td>'+fmTime(r.salida,!r.salida)+'</td><td>'+fmMin(r.ef)+'</td><td class="'+c+'">'+(r.delta>=0?'+':'')+fmMin(r.delta)+'</td></tr>';}).join('');
   var al=[];
   var lr=gd().sort(function(a,b){return a.fecha>b.fecha?1:-1;}).slice(-1)[0];
   if(lr&&lr.salida){var dh=(new Date()-new Date(lr.fecha+'T'+lr.salida))/3600000;if(dh<cfg().interJornada&&dh>0)al.push({t:'warn',m:'Han pasado '+dh.toFixed(1)+'h desde tu última salida. Minimo interjornada: '+cfg().interJornada+'h.'});}
@@ -1288,20 +1291,20 @@ document.getElementById('rFecha').addEventListener('change',calcPrev);
 
 window.saveReg=function(forzar){
   var fecha=document.getElementById('rFecha').value,e=document.getElementById('rE').value,s=document.getElementById('rS').value,nota=document.getElementById('rNota').value,eid=document.getElementById('editId').value;
-  if(!fecha||!e||!s){alert('Completa fecha, entrada y salida.');return;}
-  var r=calcJ(e,s);
-  var reg={id:eid||Date.now().toString(),fecha:fecha,entrada:e,salida:s,nota:nota,tot:r?r.tot:0,desc:60,ef:r?r.ef:0,delta:r?r.delta:0};
+  if(!fecha||!e){alert('Completá al menos la fecha y la hora de entrada.');return;}
+  // Salida es opcional — si no hay salida, ef y delta quedan en 0
+  var r=s?calcJ(e,s):null;
+  var reg={id:eid||Date.now().toString(),fecha:fecha,entrada:e,salida:s||'',nota:nota,tot:r?r.tot:0,desc:s?60:0,ef:r?r.ef:0,delta:r?r.delta:0};
   var data=gd();
   if(eid){
     data=data.map(function(x){return x.id===eid?reg:x;});
   } else {
     var existe=data.find(function(x){return x.fecha===fecha;});
     if(existe && !forzar){
-      // Mostrar modal de confirmación en vez de confirm()
       document.getElementById('replaceModal').style.display='flex';
       document.getElementById('replaceFecha').textContent=fmDate(fecha);
       document.getElementById('replaceOld').textContent=(existe.entrada||'--')+' → '+(existe.salida||'--');
-      document.getElementById('replaceNew').textContent=e+' → '+s;
+      document.getElementById('replaceNew').textContent=e+' → '+(s||'pendiente');
       return;
     }
     data=data.filter(function(x){return x.fecha!==fecha;});
@@ -1347,7 +1350,7 @@ function renderHist(){
   if(!ws.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">Sin registros</div></div></td></tr>';return;}
   tb.innerHTML=ws.map(function(r){
     var dc=r.delta>0?'pos':r.delta<0?'neg':'',sc=r.saldoAc>=0?'pos':'neg';
-    return'<tr><td>'+fmDate(r.fecha)+'</td><td>'+fmTime(r.entrada)+'</td><td>'+fmTime(r.salida)+'</td><td>'+fmMin(r.ef)+'</td><td class="'+dc+'">'+(r.delta>=0?'+':'')+fmMin(r.delta)+'</td><td class="'+sc+'">'+(r.saldoAc>=0?'+':'')+fmMin(r.saldoAc)+'</td><td style="font-size:10px;color:var(--tx2)">'+(r.nota||'')+'</td><td><div style="display:flex;gap:5px"><button class="bxs bxs-e" onclick="editReg(\''+r.id+'\')">Ed</button><button class="bxs bxs-d" onclick="delReg(\''+r.id+'\')">X</button></div></td></tr>';
+    return'<tr><td>'+fmDate(r.fecha)+'</td><td>'+fmTime(r.entrada)+'</td><td>'+fmTime(r.salida,!r.salida)+'</td><td>'+fmMin(r.ef)+'</td><td class="'+dc+'">'+(r.delta>=0?'+':'')+fmMin(r.delta)+'</td><td class="'+sc+'">'+(r.saldoAc>=0?'+':'')+fmMin(r.saldoAc)+'</td><td style="font-size:10px;color:var(--tx2)">'+(r.nota||'')+'</td><td><div style="display:flex;gap:5px"><button class="bxs bxs-e" onclick="editReg(\''+r.id+'\')">Ed</button><button class="bxs bxs-d" onclick="delReg(\''+r.id+'\')">X</button></div></td></tr>';
   }).join('');
 }
 
