@@ -393,30 +393,53 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div class="saldo-label">Saldo del Período Actual</div>
     <div class="saldo-value pos" id="dashSaldo">+0h00</div>
     <div class="saldo-bar-wrap"><div class="saldo-bar pos" id="dashSaldoBar" style="width:50%"></div></div>
-    <!-- BARRA DÍA LIBRE -->
+    <!-- BARRA DÍA LIBRE + SÁBADO SIN ABATE -->
     <div style="margin-top:14px;margin-bottom:4px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Progreso hacia día libre</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em">Horas acumuladas</span>
         <span style="font-family:var(--mono);font-size:11px;font-weight:700" id="diaLibrePct">0%</span>
       </div>
-      <div style="width:100%;height:14px;background:var(--sur3);border-radius:7px;overflow:hidden;position:relative">
-        <div id="diaLibreBar" style="height:100%;width:0%;border-radius:7px;transition:width .6s ease;background:linear-gradient(90deg,var(--green),#00ff88)"></div>
-        <!-- Marcas de 25%, 50%, 75% -->
-        <div style="position:absolute;inset:0;display:flex;pointer-events:none">
-          <div style="flex:1;border-right:1px solid rgba(0,0,0,.3)"></div>
-          <div style="flex:1;border-right:1px solid rgba(0,0,0,.3)"></div>
-          <div style="flex:1;border-right:1px solid rgba(0,0,0,.3)"></div>
-          <div style="flex:1"></div>
+
+      <!-- Barra principal -->
+      <div style="width:100%;height:18px;background:var(--sur3);border-radius:9px;overflow:visible;position:relative;margin-bottom:2px">
+        <div id="diaLibreBar" style="height:100%;width:0%;border-radius:9px;transition:width .6s ease;background:linear-gradient(90deg,var(--green),#00ff88)"></div>
+        <!-- Marcas de referencia sábado sin abate (sobre la barra, como pines) -->
+        <!-- 19:00 = 150min = 34% | 18:00 = 210min = 48% | 17:00 = 270min = 61% | 16:00 = 330min = 75% | Día libre = 440min = 100% -->
+        <div style="position:absolute;inset:0;pointer-events:none">
+          <!-- 19:00 sáb -->
+          <div style="position:absolute;left:34%;top:0;bottom:0;width:2px;background:rgba(255,180,0,.5)"></div>
+          <!-- 18:00 sáb -->
+          <div style="position:absolute;left:48%;top:0;bottom:0;width:2px;background:rgba(255,180,0,.5)"></div>
+          <!-- 17:00 sáb -->
+          <div style="position:absolute;left:61%;top:0;bottom:0;width:2px;background:rgba(255,180,0,.5)"></div>
+          <!-- 16:00 sáb -->
+          <div style="position:absolute;left:75%;top:0;bottom:0;width:2px;background:rgba(255,180,0,.7)"></div>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:3px">
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">0</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">1h50</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">3h40</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">5h30</span>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700">7h20 🏖</span>
+
+      <!-- Etiquetas de referencia -->
+      <div style="position:relative;height:28px;margin-top:4px">
+        <span style="position:absolute;left:0;transform:translateX(0);font-family:var(--mono);font-size:8px;color:var(--tx3)">0</span>
+        <span style="position:absolute;left:34%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:#ffb400;white-space:nowrap">🚕19h</span>
+        <span style="position:absolute;left:48%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:#ffb400;white-space:nowrap">18h</span>
+        <span style="position:absolute;left:61%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:#ffb400;white-space:nowrap">17h</span>
+        <span style="position:absolute;left:75%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:#ffb400;white-space:nowrap">16h</span>
+        <span style="position:absolute;right:0;transform:translateX(0);font-family:var(--mono);font-size:8px;color:var(--green);font-weight:700;white-space:nowrap">7h20🏖</span>
       </div>
-      <div id="diaLibreMsg" style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-top:6px;text-align:center"></div>
+
+      <!-- Leyenda -->
+      <div style="display:flex;gap:14px;margin-top:4px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div style="width:10px;height:3px;background:#ffb400;border-radius:2px"></div>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">Salida sáb sin abate</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div style="width:10px;height:3px;background:var(--green);border-radius:2px"></div>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">Día libre completo</span>
+        </div>
+      </div>
+
+      <div id="diaLibreMsg" style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-top:8px;text-align:center;line-height:1.6"></div>
     </div>
     <div class="saldo-status">
       <span class="saldo-tag pos" id="dashSaldoTag">A FAVOR</span>
@@ -1444,23 +1467,40 @@ function renderDash(){
   if(pctEl) pctEl.textContent = (sal < 0 ? '-' : '') + pct + '%';
   if(pctEl) pctEl.style.color = sal < 0 ? 'var(--red)' : pct >= 100 ? 'var(--green)' : 'var(--tx)';
 
+  // Referencias sábado sin abate: 21:30 salida normal
+  // Para salir a las X: necesitás 21:30 - X en minutos
+  var SAB_REF = [
+    {hora:'19:00', min:150},
+    {hora:'18:00', min:210},
+    {hora:'17:00', min:270},
+    {hora:'16:00', min:330}
+  ];
+
   if(msgEl){
     if(sal < 0){
-      msgEl.textContent = 'Necesitás '+fmMin(Math.abs(sal))+' para equilibrar';
-      msgEl.style.color = 'var(--red)';
-    } else if(diasLibres >= 1){
-      var msg = diasLibres === 1
-        ? '🏖 Tenés 1 día libre completo acumulado'
-        : '🏖 Tenés '+diasLibres+' días libres acumulados';
-      if(resto > 0) msg += ' + '+fmMin(resto)+' extra';
-      msgEl.textContent = msg;
-      msgEl.style.color = 'var(--green)';
+      msgEl.innerHTML = '<span style="color:var(--red)">Necesitás '+fmMin(Math.abs(sal))+' para equilibrar</span>';
     } else if(sal === 0){
-      msgEl.textContent = 'Saldo en cero';
-      msgEl.style.color = 'var(--tx3)';
+      msgEl.innerHTML = '<span style="color:var(--tx3)">Saldo en cero</span>';
     } else {
-      msgEl.textContent = 'Faltan '+fmMin(JORNADA_MIN - sal)+' para completar un día libre';
-      msgEl.style.color = 'var(--tx2)';
+      var lines = [];
+      // Día libre
+      if(diasLibres >= 1){
+        var dlMsg = diasLibres === 1 ? '🏖 1 día libre completo' : '🏖 '+diasLibres+' días libres';
+        if(resto > 0) dlMsg += ' + '+fmMin(resto);
+        lines.push('<span style="color:var(--green);font-weight:700">'+dlMsg+'</span>');
+      } else {
+        lines.push('<span style="color:var(--tx2)">Faltan '+fmMin(JORNADA_MIN - sal)+' para un día libre</span>');
+      }
+      // Sábado sin abate
+      var sabOpc = SAB_REF.filter(function(r){return sal >= r.min;});
+      if(sabOpc.length){
+        var mejor = sabOpc[sabOpc.length-1]; // la más temprana que alcanza
+        lines.push('<span style="color:#ffb400">🚕 Sáb sin abate: podés salir a las '+mejor.hora+' (usás '+fmMin(mejor.min)+')</span>');
+      } else if(sal > 0){
+        var prox = SAB_REF[0];
+        lines.push('<span style="color:var(--tx3)">🚕 Sáb: faltan '+fmMin(prox.min - sal)+' para salir a las '+prox.hora+'</span>');
+      }
+      msgEl.innerHTML = lines.join('<br>');
     }
   }
   var totEf=data.reduce(function(a,b){return a+(b.ef||0);},0);
