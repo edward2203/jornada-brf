@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -175,7 +175,45 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 .user-avatar{width:38px;height:38px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:17px;font-weight:700;color:#000;flex-shrink:0}
 #userBtn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);cursor:pointer;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #userBtn:hover{border-color:var(--green);color:var(--green)}
-@media(max-width:580px){.main{padding:16px 12px}.saldo-value{font-size:36px}.stat-grid{grid-template-columns:1fr 1fr}.logo-text{display:none}}
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .main{padding:14px 10px}
+  .logo-text{display:none}
+  .saldo-value{font-size:36px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 12px;gap:8px;height:50px}
+  .period-badge{display:none}
+  .nav-tab{padding:10px 10px;font-size:11px}
+  .card{padding:14px 12px;margin-bottom:14px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .btn-row{gap:6px}
+  .btn{padding:8px 14px;font-size:12px}
+  .sec-title{font-size:20px}
+  table{font-size:11px}
+  th,td{padding:6px 4px}
+  .saldo-display{padding:16px 14px}
+  dialog{width:min(340px,96vw)}
+  .dialog-content{padding:20px 16px}
+}
+@media(max-width:380px){
+  .saldo-value{font-size:30px}
+  .nav-tab{padding:9px 7px;font-size:10px;letter-spacing:.04em}
+  .card{padding:12px 10px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  table{font-size:10px}
+  th,td{padding:5px 3px}
+}
+@media(min-width:768px){
+  .main{padding:24px 24px;max-width:720px;margin:0 auto}
+  .form-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(min-width:1024px){
+  .main{max-width:900px}
+  .nav{padding:0 32px}
+  .topbar{padding:0 32px}
+}
 </style>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
