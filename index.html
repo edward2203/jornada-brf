@@ -260,10 +260,11 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div class="logo-text">JORNADA <span>BRF</span></div>
   </div>
   <div class="clock" id="liveClock">--:--:--</div>
+  <button id="langBtn" onclick="toggleLang()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);border-radius:6px;padding:4px 9px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap">🌐 ES</button>
   <button id="userBtn" onclick="abrirUsuarios()" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap">👤 --</button>
   <div id="syncBadge" style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">⏳ conectando</div>
   <div class="period-badge" id="periodBadge">cargando...</div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--tx3)">v14.03b</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--tx3)">v17.03</div>
 </div>
 
 <nav class="nav">
@@ -429,7 +430,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div style="font-family:var(--mono);font-size:11px;color:var(--tx2)" id="dashDate">--</div>
   </div>
   <div class="saldo-display">
-    <div class="saldo-label">Saldo del Período Actual</div>
+    <div class="saldo-label" data-i18n="saldo_periodo">Saldo del Período Actual</div>
     <div class="saldo-value pos" id="dashSaldo">+0h00</div>
     <div class="saldo-bar-wrap"><div class="saldo-bar pos" id="dashSaldoBar" style="width:50%"></div></div>
     <!-- BARRA DÍA LIBRE + SÁBADO SIN ABATE -->
@@ -505,8 +506,8 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div id="sabadoInfo" style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:6px;text-align:center"></div>
   </div>
   <div class="stat-grid">
-    <div class="stat-box"><div class="stat-label">Días</div><div class="stat-value" id="dDias">0</div></div>
-    <div class="stat-box"><div class="stat-label">Trabajado</div><div class="stat-value" id="dTrab">0h00</div></div>
+    <div class="stat-box"><div class="stat-label" data-i18n="dias">Días</div><div class="stat-value" id="dDias">0</div></div>
+    <div class="stat-box"><div class="stat-label" data-i18n="trabajado">Trabajado</div><div class="stat-value" id="dTrab">0h00</div></div>
     <div class="stat-box"><div class="stat-label">Normal</div><div class="stat-value" id="dNorm">0h00</div></div>
     <div class="stat-box"><div class="stat-label">Extras</div><div class="stat-value pos" id="dExtra">0h00</div></div>
   </div>
@@ -867,42 +868,102 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   <!-- Configuración de salario -->
   <div class="card" style="border-color:rgba(255,171,64,.3)">
     <div class="card-title">Configuración de salário</div>
-    <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:14px;line-height:1.7">Completá tu datos para calcular la estimativa. Solo vos ves esta información.</p>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:16px;line-height:1.7">Solo vos ves esta información. Completá con los datos de tu holerite.</p>
+
+    <div style="font-family:var(--mono);font-size:10px;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📄 Proventos</div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="fg">
         <label>Tipo de contrato</label>
         <select id="cfgTipoSal" class="form-control" style="font-size:13px">
           <option value="horista">Horista (por hora)</option>
-          <option value="mensalista">Mensalista (salario fijo)</option>
+          <option value="mensalista">Mensalista (fijo)</option>
         </select>
       </div>
       <div class="fg">
-        <label id="cfgSalLabel">Valor por hora (R$)</label>
-        <input type="number" id="cfgValorHora" class="form-control" placeholder="9.35" step="0.01" min="0" style="font-size:14px">
+        <label>Valor hora / salario (R$)</label>
+        <input type="number" id="cfgValorHora" class="form-control" placeholder="9.35" step="0.01" min="0">
       </div>
     </div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="fg">
-        <label>% Extra 1 (hasta 2h)</label>
-        <input type="number" id="cfgExtra1" class="form-control" placeholder="50" min="0" max="200" style="font-size:14px">
+        <label>% Hora extra (normal)</label>
+        <input type="number" id="cfgExtra1" class="form-control" placeholder="50" min="0" max="200">
       </div>
       <div class="fg">
-        <label>% Extra 2 (domingo/feriado)</label>
-        <input type="number" id="cfgExtra2" class="form-control" placeholder="100" min="0" max="200" style="font-size:14px">
+        <label>% Hora extra (dom/feriado)</label>
+        <input type="number" id="cfgExtra2" class="form-control" placeholder="100" min="0" max="200">
       </div>
     </div>
-    <div class="form-grid" style="margin-bottom:14px">
+    <div class="form-grid" style="margin-bottom:12px">
       <div class="fg">
         <label>Adicional noturno (%)</label>
-        <input type="number" id="cfgNoturno" class="form-control" placeholder="20" min="0" max="100" style="font-size:14px">
+        <input type="number" id="cfgNoturno" class="form-control" placeholder="20" min="0" max="100">
       </div>
       <div class="fg">
         <label>Horas/mes contratadas</label>
-        <input type="number" id="cfgHMes" class="form-control" placeholder="220" min="1" style="font-size:14px">
+        <input type="number" id="cfgHMes" class="form-control" placeholder="220" min="1">
       </div>
     </div>
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="fg">
+        <label>Insalubridade (R$ fixo/mês)</label>
+        <input type="number" id="cfgInsalub" class="form-control" placeholder="302.58" step="0.01" min="0">
+      </div>
+      <div class="fg">
+        <label>Troca uniforme (h/mês)</label>
+        <input type="number" id="cfgTrocaUnif" class="form-control" placeholder="3.38" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:4px">📉 Descontos fixos</div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg">
+        <label>Contrib. Assistencial (R$)</label>
+        <input type="number" id="cfgContribAssist" class="form-control" placeholder="50.00" step="0.01" min="0">
+      </div>
+      <div class="fg">
+        <label>Seguro de Vida (R$)</label>
+        <input type="number" id="cfgSegVida" class="form-control" placeholder="12.85" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg">
+        <label>Conv. Odontológico (R$)</label>
+        <input type="number" id="cfgOdonto" class="form-control" placeholder="6.78" step="0.01" min="0">
+      </div>
+      <div class="fg">
+        <label>Cesta Básica (R$)</label>
+        <input type="number" id="cfgCesta" class="form-control" placeholder="1.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:4px">📉 Descontos variáveis</div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg">
+        <label>Refeições/Restaurante (R$)</label>
+        <input type="number" id="cfgRefeicoes" class="form-control" placeholder="101.79" step="0.01" min="0">
+      </div>
+      <div class="fg">
+        <label>Lanche Automático (R$)</label>
+        <input type="number" id="cfgLanche" class="form-control" placeholder="10.65" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="fg">
+        <label>Loja BRF / Venda produtos (R$)</label>
+        <input type="number" id="cfgLoja" class="form-control" placeholder="291.00" step="0.01" min="0">
+      </div>
+      <div class="fg">
+        <label>Outros descontos (R$)</label>
+        <input type="number" id="cfgOutrosDesc" class="form-control" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-bottom:12px;line-height:1.6">
+      ℹ️ INSS calculado automaticamente pela tabela progressiva 2026
+    </div>
     <div id="cfgSalMsg" style="font-family:var(--mono);font-size:10px;margin-bottom:10px;display:none"></div>
-    <button class="btn btn-p" onclick="saveSalarioCfg()" style="width:100%;background:var(--amb);color:#000">Guardar configuración</button>
+    <button class="btn btn-p" onclick="saveSalarioCfg()" style="width:100%;background:var(--amb);color:#000;padding:13px">💾 Guardar configuración salarial</button>
   </div>
 
   <!-- Configuración de turno -->
@@ -970,47 +1031,73 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
 <div class="panel" id="panel-salario">
   <div class="sec-hdr"><div class="sec-title">💰 Estimativa de Salário</div></div>
 
-  <!-- Resumen principal -->
+  <!-- Salario neto destacado -->
   <div class="card" style="border-color:rgba(255,171,64,.3)">
-    <div class="card-title">Período actual</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="card-title">Período atual · estimativa</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
       <div class="stat-box">
-        <div class="stat-label">Horas normales</div>
+        <div class="stat-label">H. normais</div>
         <div class="stat-value" id="salHNorm">--</div>
       </div>
       <div class="stat-box">
-        <div class="stat-label">Horas extra</div>
+        <div class="stat-label">H. extras</div>
         <div class="stat-value pos" id="salHExtra">--</div>
       </div>
       <div class="stat-box">
-        <div class="stat-label">Valor normal</div>
-        <div class="stat-value" id="salVNorm">--</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Valor extras</div>
-        <div class="stat-value pos" id="salVExtra">--</div>
+        <div class="stat-label">Días reg.</div>
+        <div class="stat-value" id="salDias">--</div>
       </div>
     </div>
-    <div style="background:rgba(255,171,64,.08);border:1px solid rgba(255,171,64,.25);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Estimativa bruta do período</div>
-      <div style="font-family:var(--cond);font-size:36px;font-weight:700;color:var(--amb)" id="salTotal">R$ --</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px" id="salObs">Configura tu salário em ⚙ Conta</div>
+
+    <!-- Bruto -->
+    <div style="background:var(--sur2);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase">Total bruto</span>
+        <strong style="font-family:var(--cond);font-size:22px;color:var(--amb)" id="salBruto">R$ --</strong>
+      </div>
+    </div>
+
+    <!-- Descontos resumo -->
+    <div style="background:rgba(255,68,68,.05);border:1px solid rgba(255,68,68,.15);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase">Total descontos</span>
+        <strong style="font-family:var(--cond);font-size:22px;color:var(--red)" id="salDescTotal">- R$ --</strong>
+      </div>
+    </div>
+
+    <!-- Líquido -->
+    <div style="background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.25);border-radius:10px;padding:14px 16px;text-align:center">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">💳 Estimativa líquida</div>
+      <div style="font-family:var(--cond);font-size:40px;font-weight:700;color:var(--green)" id="salTotal">R$ --</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px" id="salObs">Configura em ⚙ Conta → Configuração salarial</div>
     </div>
   </div>
 
-  <!-- Desglose detallado -->
+  <!-- Desglose proventos -->
   <div class="card">
-    <div class="card-title">Desglose del período</div>
+    <div class="card-title">📄 Proventos detalhados</div>
+    <div id="salProventos" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
+  </div>
+
+  <!-- Desglose descontos -->
+  <div class="card">
+    <div class="card-title">📉 Descontos detalhados</div>
+    <div id="salDescontos" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
+  </div>
+
+  <!-- Desglose por dia -->
+  <div class="card">
+    <div class="card-title">Desglose por dia</div>
     <div id="salDesglose" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
   </div>
 
-  <!-- Valor de cada hora -->
+  <!-- Referencia valores -->
   <div class="card">
-    <div class="card-title">Referencia — valor por tipo de hora</div>
+    <div class="card-title">Referencia · valor por tipo de hora</div>
     <div id="salReferencia" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
   </div>
 
-  <!-- Proyección mensual -->
+  <!-- Proyección -->
   <div class="card">
     <div class="card-title">Proyección al cierre del período</div>
     <div id="salProyeccion" style="font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.8">--</div>
@@ -1947,7 +2034,10 @@ function stKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red
 function cfgSal(){
   var def={
     tipo:'horista', valorHora:9.35,
-    extra1:50, extra2:100, noturno:20, hMes:220
+    extra1:50, extra2:100, noturno:20, hMes:220,
+    insalub:302.58, trocaUnif:3.38,
+    contribAssist:50, segVida:12.85, odonto:6.78, cesta:1.00,
+    refeicoes:101.79, lanche:10.65, loja:291.00, outrosDesc:0
   };
   try{return Object.assign({},def,JSON.parse(localStorage.getItem((cfgKey()+'_sal'))||'{}'));}
   catch(e){return def;}
@@ -1955,139 +2045,382 @@ function cfgSal(){
 function saveCfgSal(c){localStorage.setItem(cfgKey()+'_sal',JSON.stringify(Object.assign(cfgSal(),c)));}
 
 function fmBRL(v){
+  if(isNaN(v))return 'R$ --';
   return 'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 }
 
+// Tabela INSS progressiva 2026
+function calcINSS(base){
+  var faixas=[
+    {ate:1518.00,   aliq:0.075},
+    {ate:2793.88,   aliq:0.09},
+    {ate:4190.83,   aliq:0.12},
+    {ate:8157.41,   aliq:0.14}
+  ];
+  var inss=0, ant=0;
+  for(var i=0;i<faixas.length;i++){
+    var f=faixas[i];
+    if(base<=ant) break;
+    var trecho=Math.min(base,f.ate)-ant;
+    inss+=trecho*f.aliq;
+    ant=f.ate;
+    if(base<=f.ate) break;
+  }
+  return Math.min(inss, 8157.41*0.14);
+}
+
 window.saveSalarioCfg=function(){
-  var get=function(id){return document.getElementById(id);};
-  var tipo=(get('cfgTipoSal')||{}).value||'horista';
-  var vh=parseFloat((get('cfgValorHora')||{}).value)||0;
-  var e1=parseFloat((get('cfgExtra1')||{}).value)||50;
-  var e2=parseFloat((get('cfgExtra2')||{}).value)||100;
-  var no=parseFloat((get('cfgNoturno')||{}).value)||20;
-  var hm=parseFloat((get('cfgHMes')||{}).value)||220;
-  saveCfgSal({tipo:tipo,valorHora:vh,extra1:e1,extra2:e2,noturno:no,hMes:hm});
-  var msg=get('cfgSalMsg');
-  if(msg){msg.textContent='✓ Guardado';msg.style.color='var(--green)';msg.style.display='';}
+  var gv=function(id){var el=document.getElementById(id);return el?el.value:'';};
+  var pf=function(id,def){return parseFloat(gv(id))||def||0;};
+  saveCfgSal({
+    tipo:gv('cfgTipoSal')||'horista',
+    valorHora:pf('cfgValorHora',9.35),
+    extra1:pf('cfgExtra1',50), extra2:pf('cfgExtra2',100),
+    noturno:pf('cfgNoturno',20), hMes:pf('cfgHMes',220),
+    insalub:pf('cfgInsalub',302.58), trocaUnif:pf('cfgTrocaUnif',3.38),
+    contribAssist:pf('cfgContribAssist',50), segVida:pf('cfgSegVida',12.85),
+    odonto:pf('cfgOdonto',6.78), cesta:pf('cfgCesta',1),
+    refeicoes:pf('cfgRefeicoes',101.79), lanche:pf('cfgLanche',10.65),
+    loja:pf('cfgLoja',291), outrosDesc:pf('cfgOutrosDesc',0)
+  });
+  var msg=document.getElementById('cfgSalMsg');
+  if(msg){msg.textContent='✓ Configuração salva';msg.style.color='var(--green)';msg.style.display='';}
   renderSalario();
 };
 
 function fillSalarioCfg(){
   var c=cfgSal();
-  var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
-  set('cfgTipoSal',c.tipo);
-  set('cfgValorHora',c.valorHora);
-  set('cfgExtra1',c.extra1);
-  set('cfgExtra2',c.extra2);
-  set('cfgNoturno',c.noturno);
-  set('cfgHMes',c.hMes);
+  var sv=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
+  sv('cfgTipoSal',c.tipo); sv('cfgValorHora',c.valorHora);
+  sv('cfgExtra1',c.extra1); sv('cfgExtra2',c.extra2);
+  sv('cfgNoturno',c.noturno); sv('cfgHMes',c.hMes);
+  sv('cfgInsalub',c.insalub); sv('cfgTrocaUnif',c.trocaUnif);
+  sv('cfgContribAssist',c.contribAssist); sv('cfgSegVida',c.segVida);
+  sv('cfgOdonto',c.odonto); sv('cfgCesta',c.cesta);
+  sv('cfgRefeicoes',c.refeicoes); sv('cfgLanche',c.lanche);
+  sv('cfgLoja',c.loja); sv('cfgOutrosDesc',c.outrosDesc);
+}
+
+function rowSal(label,val,color){
+  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+    +'<span style="color:var(--tx2);font-size:11px">'+label+'</span>'
+    +'<strong style="color:'+(color||'var(--tx)')+'">'+fmBRL(val)+'</strong></div>';
 }
 
 function renderSalario(){
   var c=cfgSal();
-  var turno=cfg();
   var vh=c.valorHora||0;
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+  var setH=function(id,v){var el=document.getElementById(id);if(el)el.innerHTML=v;};
+
   if(!vh){
-    ['salHNorm','salHExtra','salVNorm','salVExtra'].forEach(function(id){
-      var el=document.getElementById(id);if(el)el.textContent='--';
-    });
-    var tot=document.getElementById('salTotal');
-    if(tot)tot.textContent='R$ --';
-    var obs=document.getElementById('salObs');
-    if(obs)obs.textContent='Configurá tu salário en ⚙ Cuenta → Configuración de salário';
+    set('salTotal','R$ --');
+    set('salObs','Configura em ⚙ Conta → Configuração salarial');
     return;
   }
 
   var p=getPeriod(todayStr());
   var data=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
-  var JM=440; // 7h20 en minutos
+  var JM=440;
 
-  // Sumar horas
+  // ── CALCULAR HORAS ──
   var minNorm=0, minExtra=0;
   data.forEach(function(r){
     if(!r.ef||r.ef<=0) return;
-    var norm=Math.min(r.ef, JM);
-    var ext=Math.max(0,r.ef-JM);
-    minNorm+=norm; minExtra+=ext;
+    minNorm+=Math.min(r.ef,JM);
+    minExtra+=Math.max(0,r.ef-JM);
   });
 
   var hNorm=minNorm/60, hExtra=minExtra/60;
-  var vHoraExtra=vh*(1+c.extra1/100);
+  var vHExtra=vh*(1+c.extra1/100);
+  var vHExtra2=vh*(1+c.extra2/100);
+  var vHNot=vh*(1+c.noturno/100);
 
-  var vNorm, vExtra;
-  if(c.tipo==='horista'){
-    vNorm=hNorm*vh;
-    vExtra=hExtra*vHoraExtra;
-  } else {
-    var valorHoraCalc=vh/c.hMes;
-    vNorm=vh;
-    vExtra=hExtra*(valorHoraCalc*(1+c.extra1/100));
-  }
+  // ── PROVENTOS ──
+  var vHorasNorm = c.tipo==='horista' ? hNorm*vh : c.valorHora;
+  var vExtras     = hExtra*vHExtra;
+  var vInsalub    = c.insalub||0;
+  var vTrocaUnif  = (c.trocaUnif||0)*vHExtra; // troca uniforme é paga como extra 50%
+  var vDSR        = 0; // calculado como % das horas
+  // DSR = (horas trabalhadas / dias úteis) × dias de DSR (aprox 4-5/mês)
+  var diasReg=data.filter(function(r){return r.ef>0;}).length;
+  var diasDSR=Math.floor(diasReg/6); // ~1 DSR por semana
+  if(c.tipo==='horista') vDSR=(hNorm/diasReg||0)*(diasDSR||0)*vh;
 
-  var vTotal=vNorm+vExtra;
+  var totalBruto = vHorasNorm + vExtras + vInsalub + vTrocaUnif + vDSR;
 
-  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
-  set('salHNorm', fmMin(minNorm));
+  // ── DESCONTOS ──
+  var vINSS    = calcINSS(totalBruto);
+  var vFixos   = (c.contribAssist||0)+(c.segVida||0)+(c.odonto||0)+(c.cesta||0);
+  var vVariav  = (c.refeicoes||0)+(c.lanche||0)+(c.loja||0)+(c.outrosDesc||0);
+  var totalDesc= vINSS + vFixos + vVariav;
+  var liquido  = totalBruto - totalDesc;
+
+  // ── ATUALIZAR UI ──
+  set('salHNorm',  fmMin(minNorm));
   set('salHExtra', '+'+fmMin(minExtra));
-  set('salVNorm', fmBRL(vNorm));
-  set('salVExtra', '+'+fmBRL(vExtra));
-  set('salTotal', fmBRL(vTotal));
-  set('salObs', data.length+' días registrados en el período · estimativa bruta');
+  set('salDias',   diasReg+'d');
+  set('salBruto',  fmBRL(totalBruto));
+  set('salDescTotal','- '+fmBRL(totalDesc));
+  set('salTotal',  fmBRL(liquido));
+  set('salObs',    diasReg+' días reg. · bruto '+fmBRL(totalBruto)+' · estimativa');
 
+  // Proventos detalhados
+  var pv='';
+  pv+=rowSal('Horas normais ('+fmMin(minNorm)+')',vHorasNorm,'var(--tx)');
+  if(vExtras>0)    pv+=rowSal('Horas extra 50% ('+fmMin(minExtra)+')',vExtras,'var(--amb)');
+  if(vInsalub>0)   pv+=rowSal('Adicional Insalubridade',vInsalub,'var(--amb)');
+  if(vTrocaUnif>0) pv+=rowSal('Troca Uniforme Extra 50%',vTrocaUnif,'var(--tx2)');
+  if(vDSR>0)       pv+=rowSal('Repouso Remunerado (DSR ~'+diasDSR+'d)',vDSR,'var(--tx2)');
+  pv+='<div style="display:flex;justify-content:space-between;padding:9px 0;margin-top:4px">'
+    +'<strong style="color:var(--tx)">Total Proventos</strong>'
+    +'<strong style="color:var(--amb);font-size:14px">'+fmBRL(totalBruto)+'</strong></div>';
+  setH('salProventos',pv);
+
+  // Descontos detalhados
+  var dv='';
+  dv+=rowSal('INSS (tabela progressiva)',vINSS,'var(--red)');
+  if(c.contribAssist>0) dv+=rowSal('Contribuição Assistencial',c.contribAssist,'var(--red)');
+  if(c.segVida>0)       dv+=rowSal('Seguro de Vida',c.segVida,'var(--red)');
+  if(c.odonto>0)        dv+=rowSal('Convênio Odontológico',c.odonto,'var(--red)');
+  if(c.cesta>0)         dv+=rowSal('Cesta Básica',c.cesta,'var(--red)');
+  if(c.refeicoes>0)     dv+=rowSal('Refeições / Restaurante',c.refeicoes,'var(--red)');
+  if(c.lanche>0)        dv+=rowSal('Lanche Automático',c.lanche,'var(--red)');
+  if(c.loja>0)          dv+=rowSal('Loja BRF / Venda Produtos',c.loja,'var(--red)');
+  if(c.outrosDesc>0)    dv+=rowSal('Outros descontos',c.outrosDesc,'var(--red)');
+  dv+='<div style="display:flex;justify-content:space-between;padding:9px 0;margin-top:4px">'
+    +'<strong style="color:var(--tx)">Total Descontos</strong>'
+    +'<strong style="color:var(--red);font-size:14px">'+fmBRL(totalDesc)+'</strong></div>';
+  setH('salDescontos',dv);
+
+  // Desglose por dia
   var des=document.getElementById('salDesglose');
   if(des){
     var rows=data.filter(function(r){return r.ef>0;}).map(function(r){
-      var norm=Math.min(r.ef,JM), ext=Math.max(0,r.ef-JM);
-      var vd=c.tipo==='horista'?(norm/60*vh)+(ext/60*vHoraExtra):0;
+      var norm=Math.min(r.ef,JM),ext=Math.max(0,r.ef-JM);
+      var vd=(norm/60*vh)+(ext/60*vHExtra);
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         +'<span style="color:var(--tx2)">'+fmDate(r.fecha)+'</span>'
-        +'<span>'+fmMin(norm)+'<span style="color:var(--tx3)"> norm</span>'+(ext>0?' +<span style="color:var(--amb)">'+fmMin(ext)+'</span> ext':'')+'</span>'
-        +(c.tipo==='horista'?'<span style="color:var(--amb)">'+fmBRL(vd)+'</span>':'')
-        +'</div>';
+        +'<span>'+fmMin(norm)+'<span style="color:var(--tx3)"> n</span>'+(ext>0?'+<span style="color:var(--amb)">'+fmMin(ext)+'</span>e':'')+'</span>'
+        +(c.tipo==='horista'?'<span style="color:var(--amb)">'+fmBRL(vd)+'</span>':'')+'</div>';
     }).join('');
-    des.innerHTML=rows||'<span style="color:var(--tx3)">Sin registros con horas trabajadas</span>';
+    des.innerHTML=rows||'<span style="color:var(--tx3)">Sin días registrados</span>';
   }
 
-  // Referencia de valores
+  // Referencia
   var ref=document.getElementById('salReferencia');
-  if(ref){
-    var hExtra2=vh*(1+c.extra2/100);
-    var hNot=vh*(1+c.noturno/100);
-    ref.innerHTML=[
-      ['Hora normal', fmBRL(vh),'var(--tx)'],
-      ['Hora extra +'+c.extra1+'%', fmBRL(vHoraExtra),'var(--amb)'],
-      ['Hora extra +'+c.extra2+'% (dom/feriado)', fmBRL(hExtra2),'#ff9800'],
-      ['Hora noturna +'+c.noturno+'%', fmBRL(hNot),'var(--blu)']
-    ].map(function(r){
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-        +'<span style="color:var(--tx2)">'+r[0]+'</span>'
-        +'<strong style="color:'+r[2]+'">'+r[1]+'</strong></div>';
-    }).join('');
-  }
+  if(ref) ref.innerHTML=[
+    ['Hora normal',fmBRL(vh),'var(--tx)'],
+    ['Hora extra +'+c.extra1+'%',fmBRL(vHExtra),'var(--amb)'],
+    ['Hora extra +'+c.extra2+'% (dom/feriado)',fmBRL(vHExtra2),'#ff9800'],
+    ['Hora noturna +'+c.noturno+'%',fmBRL(vHNot),'var(--blu)'],
+    ['FGTS (8% do bruto)',fmBRL(totalBruto*0.08),'var(--tx3)']
+  ].map(function(r){return rowSal(r[0],r[1],r[2]).replace(fmBRL(r[1]),r[1]);}).join('');
 
   // Proyección
   var proy=document.getElementById('salProyeccion');
   if(proy){
     var t=todayStr();
-    var diasTot=Math.ceil((new Date(p.end+'T00:00:00')-new Date(p.start+'T00:00:00'))/86400000)+1;
-    var diasReg=data.length;
     var diasRest=Math.max(0,Math.ceil((new Date(p.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000));
-    var promDia=diasReg>0?vTotal/diasReg:0;
-    var proyTotal=vTotal+(promDia*diasRest);
-    proy.innerHTML='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<span style="color:var(--tx2)">Acumulado hasta hoy</span><strong style="color:var(--amb)">'+fmBRL(vTotal)+'</strong></div>'
+    var promDia=diasReg>0?liquido/diasReg:0;
+    var proyLiq=liquido+(promDia*diasRest);
+    var proyBruto=totalBruto+(diasReg>0?(totalBruto/diasReg)*diasRest:0);
+    proy.innerHTML=rowSal('Acumulado bruto',totalBruto,'var(--amb)')
+      +rowSal('Acumulado líquido',liquido,'var(--green)')
       +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<span style="color:var(--tx2)">Días restantes</span><span>'+diasRest+'</span></div>'
+      +'<span style="color:var(--tx2);font-size:11px">Días restantes</span><span>'+diasRest+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<span style="color:var(--tx2)">Promedio por día</span><span>'+fmBRL(promDia)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:10px 0">'
-      +'<span style="color:var(--tx);font-weight:700">Proyección al cierre</span>'
-      +'<strong style="color:var(--green);font-size:16px">'+fmBRL(proyTotal)+'</strong></div>'
-      +'<div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:4px">* Estimativa bruta — sin descuentos (INSS, IRRF, etc.)</div>';
+      +'<span style="color:var(--tx2);font-size:11px">Promedio líquido/día</span><span>'+fmBRL(promDia)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">'
+      +'<strong style="color:var(--tx)">Proyección líquida al cierre</strong>'
+      +'<strong style="color:var(--green);font-size:18px">'+fmBRL(proyLiq)+'</strong></div>'
+      +'<div style="font-family:var(--mono);font-size:9px;color:var(--tx3);line-height:1.6">'
+      +'* Estimativa. INSS e DSR calculados aproximadamente. Loja BRF e refeições podem variar.</div>';
   }
 }
 
-window.JORNADA_MIN_SAL = 440; // referencia para cálculos de salario
+window.JORNADA_MIN_SAL = 440;
+// ── IDIOMA (i18n) ──
+var _lang = localStorage.getItem('app_lang')||'es';
+
+var I18N = {
+  es: {
+    nav_inicio:'Inicio', nav_registros:'Registros', nav_historial:'Historial',
+    nav_planificar:'Planificar', nav_resumen:'Resumen', nav_salario:'💰 Salario',
+    nav_ia:'✦ IA', nav_importar:'Importar BRF', nav_cuenta:'⚙ Cuenta',
+    vista_general:'Vista General', saldo_periodo:'Saldo del Período Actual',
+    a_favor:'✓ A FAVOR', debes:'⚠ DEBÉS', equilibrado:'= EQUILIBRADO',
+    dias:'Días', trabajado:'Trabajado', normal:'Normal', extras:'Extras',
+    registrar_hoy:'Registrar jornada de hoy', fecha:'Fecha',
+    entrada:'Entrada', salida:'Salida', salida_opc:'(opcional)',
+    guardar:'Guardar', limpiar:'Limpiar', nota_opc:'Nota (opcional)',
+    nota_hint:'ej: retraso ônibus, turno especial...',
+    estas_al_dia:'✓ Estás al día', horas_pendientes:'⚠ Horas pendientes',
+    faltan:'Faltan', para_equilibrar:'para equilibrar',
+    horas_acum:'Horas acumuladas', dia_libre:'7h20 🏖',
+    sal_sab:'Sáb sin abate', falta_dia_libre:'Faltan para un día libre',
+    dia_libre_comp:'día libre completo', dias_libres:'días libres',
+    historial:'Historial', todos_periodos:'Todos los períodos',
+    sin_registros:'Sin registros', acum:'Acum.',
+    planificar:'Planificar', hoy:'Hoy', manana:'Mañana', pasado:'Pasado', ayer:'Ayer',
+    resumen:'Resumen del Período', exportar_csv:'Exportar CSV', copiar:'Copiar',
+    salario:'Estimativa de Salário', periodo_actual:'Período actual',
+    horas_normales:'Horas normales', horas_extra:'Horas extra',
+    valor_normal:'Valor normal', valor_extras:'Valor extras',
+    estim_bruta:'Estimativa bruta do período', desglose:'Desglose del período',
+    referencia:'Referencia — valor por tipo de hora', proyeccion:'Proyección al cierre',
+    acum_hoy:'Acumulado hasta hoy', dias_rest:'Días restantes',
+    prom_dia:'Promedio por día', proy_cierre:'Proyección al cierre',
+    asist_ia:'✦ Asistente IA', proveedor_ia:'Proveedor de IA',
+    prediccion:'Predicción para hoy', anomalias:'Detección de anomalías',
+    analisis:'Análisis del período', analizar:'Analizar con IA',
+    chat_titulo:'Chat — preguntale sobre tu jornada',
+    importar_titulo:'Importar Espelho de Ponto · BRF',
+    subir_img:'Subir imagen del Espelho de Ponto',
+    leer_ia:'✦ Leer con IA', ocr_local:'📷 OCR local', estado:'Estado',
+    vista_previa:'Vista Previa — Datos Extraídos', importar_sel:'Importar Seleccionados',
+    mi_cuenta:'⚙ Mi Cuenta', usuario_activo:'Usuario activo',
+    cfg_turno:'Mi turno de trabajo', cfg_salario:'Configuración de salário',
+    cambiar_pwd:'Cambiar contraseña', nueva_pwd:'Nueva contraseña',
+    confirmar_pwd:'Confirmar contraseña', actualizar_pwd:'Actualizar contraseña',
+    cerrar_sesion:'⬡ CERRAR SESIÓN',
+    tema:'Tema de la aplicación', tamanio:'Tamaño de texto',
+    oscuro:'🌑 Oscuro', claro:'☀️ Claro', azul:'🌊 Azul Navy', militar:'🌿 Militar',
+    con_abate:'🐔 Con abate', sin_abate:'🔧 Sin abate',
+    taxi_flex:'Taxi de empresa · salida flexible con supervisor',
+    bus_fijo:'Bus 22:00 fijo · turno normal hasta ~22:20',
+    login_sub:'Cada empleado tiene su propio espacio',
+    ingresar:'Ingresar', crear_cuenta:'Crear cuenta nueva',
+    verificando:'verificando sesión...',
+    sincronizado:'☁ sincronizado', guardando:'⟳ guardando…',
+    sin_conexion:'✗ sin conexión', local_mode:'💾 local',
+    guardar_cfg:'Guardar configuración',
+    descanso_fijo:'Descanso: 1h fija descontada automaticamente',
+    pendiente:'⏳ pendiente', del:'Del', al:'al',
+    salida_libre_dia:'Salida sáb sin abate', dia_libre_ref:'Día libre completo',
+    horas_a_favor:'de extra acumuladas', necesitas:'Necesitás',
+    para_equilibrar2:'para equilibrar',
+  },
+  pt: {
+    nav_inicio:'Início', nav_registros:'Registros', nav_historial:'Histórico',
+    nav_planificar:'Planejar', nav_resumen:'Resumo', nav_salario:'💰 Salário',
+    nav_ia:'✦ IA', nav_importar:'Importar BRF', nav_cuenta:'⚙ Conta',
+    vista_general:'Visão Geral', saldo_periodo:'Saldo do Período Atual',
+    a_favor:'✓ A FAVOR', debes:'⚠ DEVE', equilibrado:'= EQUILIBRADO',
+    dias:'Dias', trabajado:'Trabalhado', normal:'Normal', extras:'Extras',
+    registrar_hoy:'Registrar jornada de hoje', fecha:'Data',
+    entrada:'Entrada', salida:'Saída', salida_opc:'(opcional)',
+    guardar:'Salvar', limpiar:'Limpar', nota_opc:'Observação (opcional)',
+    nota_hint:'ex: atraso ônibus, turno especial...',
+    estas_al_dia:'✓ Em dia', horas_pendientes:'⚠ Horas pendentes',
+    faltan:'Faltam', para_equilibrar:'para equilibrar',
+    horas_acum:'Horas acumuladas', dia_libre:'7h20 🏖',
+    sal_sab:'Sáb sem abate', falta_dia_libre:'Faltam para um dia livre',
+    dia_libre_comp:'dia livre completo', dias_libres:'dias livres',
+    historial:'Histórico', todos_periodos:'Todos os períodos',
+    sin_registros:'Sem registros', acum:'Acum.',
+    planificar:'Planejar', hoy:'Hoje', manana:'Amanhã', pasado:'Depois de amanhã', ayer:'Ontem',
+    resumen:'Resumo do Período', exportar_csv:'Exportar CSV', copiar:'Copiar',
+    salario:'Estimativa de Salário', periodo_actual:'Período atual',
+    horas_normales:'Horas normais', horas_extra:'Horas extras',
+    valor_normal:'Valor normal', valor_extras:'Valor extras',
+    estim_bruta:'Estimativa bruta do período', desglose:'Detalhamento do período',
+    referencia:'Referência — valor por tipo de hora', proyeccion:'Projeção ao fechamento',
+    acum_hoy:'Acumulado até hoje', dias_rest:'Dias restantes',
+    prom_dia:'Média por dia', proy_cierre:'Projeção ao fechamento',
+    asist_ia:'✦ Assistente IA', proveedor_ia:'Provedor de IA',
+    prediccion:'Previsão para hoje', anomalias:'Detecção de anomalias',
+    analisis:'Análise do período', analizar:'Analisar com IA',
+    chat_titulo:'Chat — pergunte sobre sua jornada',
+    importar_titulo:'Importar Espelho de Ponto · BRF',
+    subir_img:'Enviar imagem do Espelho de Ponto',
+    leer_ia:'✦ Ler com IA', ocr_local:'📷 OCR local', estado:'Status',
+    vista_previa:'Pré-visualização — Dados Extraídos', importar_sel:'Importar Selecionados',
+    mi_cuenta:'⚙ Minha Conta', usuario_activo:'Usuário ativo',
+    cfg_turno:'Meu turno de trabalho', cfg_salario:'Configuração de salário',
+    cambiar_pwd:'Alterar senha', nueva_pwd:'Nova senha',
+    confirmar_pwd:'Confirmar senha', actualizar_pwd:'Atualizar senha',
+    cerrar_sesion:'⬡ SAIR',
+    tema:'Tema do aplicativo', tamanio:'Tamanho do texto',
+    oscuro:'🌑 Escuro', claro:'☀️ Claro', azul:'🌊 Azul Navy', militar:'🌿 Militar',
+    con_abate:'🐔 Com abate', sin_abate:'🔧 Sem abate',
+    taxi_flex:'Táxi da empresa · saída flexível com supervisor',
+    bus_fijo:'Ônibus 22:00 fixo · turno normal até ~22:20',
+    login_sub:'Cada funcionário tem seu próprio espaço',
+    ingresar:'Entrar', crear_cuenta:'Criar nova conta',
+    verificando:'verificando sessão...',
+    sincronizado:'☁ sincronizado', guardando:'⟳ salvando…',
+    sin_conexion:'✗ sem conexão', local_mode:'💾 local',
+    guardar_cfg:'Salvar configuração',
+    descanso_fijo:'Intervalo: 1h fixo descontado automaticamente',
+    pendiente:'⏳ pendente', del:'De', al:'a',
+    salida_libre_dia:'Saída sáb sem abate', dia_libre_ref:'Dia livre completo',
+    horas_a_favor:'de extras acumuladas', necesitas:'Você precisa de',
+    para_equilibrar2:'para equilibrar',
+  }
+};
+
+function t(key){ return (I18N[_lang]&&I18N[_lang][key])||I18N['es'][key]||key; }
+
+window.toggleLang=function(){
+  _lang=_lang==='es'?'pt':'es';
+  localStorage.setItem('app_lang',_lang);
+  applyLang();
+  renderAll();
+  // Actualizar selector de sábado
+  setSabado(_sabadoTipo);
+};
+
+function applyLang(){
+  var btn=document.getElementById('langBtn');
+  if(btn) btn.textContent='🌐 '+(_lang==='es'?'ES':'PT');
+  // Nav
+  var navMap={'dashboard':'nav_inicio','registro':'nav_registros','historial':'nav_historial',
+    'simulador':'nav_planificar','resumen':'nav_resumen','salario':'nav_salario',
+    'ia':'nav_ia','importar':'nav_importar','admin':'nav_cuenta'};
+  document.querySelectorAll('.nav-tab').forEach(function(b){
+    var fn=b.getAttribute('onclick')||'';
+    var m=fn.match(/nav\('(\w+)'\)/);
+    if(m&&navMap[m[1]]){
+      var txt=t(navMap[m[1]]);
+      // Preservar estilos especiales
+      b.textContent=txt;
+    }
+  });
+  // Elementos con data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    el.textContent=t(el.getAttribute('data-i18n'));
+  });
+  // Login overlay
+  var ls=document.querySelector('#userOverlay .dialog-content p,#userOverlay p');
+  if(ls) ls.textContent=t('login_sub');
+  var btnLogin=document.getElementById('btnLogin');
+  if(btnLogin) btnLogin.textContent=t('ingresar');
+  var btnReg=document.getElementById('btnRegister');
+  if(btnReg) btnReg.textContent=t('crear_cuenta');
+  // Auth loading
+  var authTxt=document.querySelector('#authLoading div:nth-child(2)');
+  if(authTxt) authTxt.textContent=t('verificando');
+  // Sábado selector
+  var btnSA=document.getElementById('btnSabAbate');
+  if(btnSA) btnSA.textContent=t('con_abate');
+  var btnSS=document.getElementById('btnSabSinAbate');
+  if(btnSS) btnSS.textContent=t('sin_abate');
+  // Botones guardar en panels
+  var themeLabels={dark:'oscuro',light:'claro',blue:'azul',military:'militar'};
+  Object.keys(themeLabels).forEach(function(th){
+    var id='btnTheme'+th.charAt(0).toUpperCase()+th.slice(1);
+    var el=document.getElementById(id);
+    if(el) el.textContent=t(themeLabels[th]);
+    var wid='wTheme'+th.charAt(0).toUpperCase()+th.slice(1);
+    var wel=document.getElementById(wid);
+    if(wel) wel.innerHTML=t(themeLabels[th]).replace(' ','<br>');
+  });
+}
+
+function initLang(){ applyLang(); }
+
+// ── TEMAS ──
 var _theme = localStorage.getItem('app_theme')||'dark';
 
 window.setTheme=function(t){
@@ -2788,6 +3121,7 @@ function appInit(){
   initSabadoSelector();
   initTheme();
   initFontSize();
+  initLang();
 }
 
 function hideAuthLoading(){
