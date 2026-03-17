@@ -308,6 +308,64 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   </div>
 </div>
 
+<!-- MODAL BIENVENIDA / CONFIGURACIÓN INICIAL -->
+<div id="welcomeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10001;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:18px;width:min(380px,96vw);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6)">
+
+    <!-- Paso 1: Bienvenida + tema -->
+    <div id="wStep1">
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,230,118,.03));padding:28px 24px 20px;text-align:center;border-bottom:1px solid var(--bdr)">
+        <div style="font-size:36px;margin-bottom:8px">🕐</div>
+        <div style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--tx)">¡Bienvenido!</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-top:6px">Configuremos la app a tu gusto</div>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">¿Qué tema preferís?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+          <button onclick="wSelectTheme('dark')" id="wThemeDark"
+            style="padding:14px 8px;border-radius:10px;border:2px solid var(--green);background:rgba(0,230,118,.1);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green);transition:all .2s">
+            🌑<br>Oscuro
+          </button>
+          <button onclick="wSelectTheme('light')" id="wThemeLight"
+            style="padding:14px 8px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2);transition:all .2s">
+            ☀️<br>Claro
+          </button>
+          <button onclick="wSelectTheme('blue')" id="wThemeBlue"
+            style="padding:14px 8px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2);transition:all .2s">
+            🌊<br>Azul Navy
+          </button>
+          <button onclick="wSelectTheme('military')" id="wThemeMilitary"
+            style="padding:14px 8px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2);transition:all .2s">
+            🌿<br>Militar
+          </button>
+        </div>
+        <button onclick="wGoStep2()" class="btn btn-p" style="width:100%;padding:13px">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- Paso 2: Tamaño de fuente -->
+    <div id="wStep2" style="display:none">
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,230,118,.03));padding:20px 24px 16px;text-align:center;border-bottom:1px solid var(--bdr)">
+        <div style="font-size:32px;margin-bottom:6px">👁️</div>
+        <div style="font-family:var(--cond);font-size:20px;font-weight:700;color:var(--tx)">¿Cómo ves mejor?</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-top:4px">Ajustá el tamaño del texto</div>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          <button onclick="wSelectFont(0)" id="wFont0" style="padding:13px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-weight:700;color:var(--tx2);font-size:11px;transition:all .2s">A — Pequeño (85%)</button>
+          <button onclick="wSelectFont(1)" id="wFont1" style="padding:13px;border-radius:10px;border:2px solid var(--green);background:rgba(0,230,118,.1);cursor:pointer;font-family:var(--mono);font-weight:700;color:var(--green);font-size:13px;transition:all .2s">A — Normal (recomendado)</button>
+          <button onclick="wSelectFont(2)" id="wFont2" style="padding:13px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-weight:700;color:var(--tx2);font-size:15px;transition:all .2s">A — Mediano</button>
+          <button onclick="wSelectFont(3)" id="wFont3" style="padding:13px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-weight:700;color:var(--tx2);font-size:17px;transition:all .2s">A — Grande</button>
+          <button onclick="wSelectFont(4)" id="wFont4" style="padding:13px;border-radius:10px;border:2px solid var(--bdr);background:var(--sur2);cursor:pointer;font-family:var(--mono);font-weight:700;color:var(--tx2);font-size:20px;transition:all .2s">A — Muy grande</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-align:center;margin-bottom:14px">Podés cambiarlo cuando quieras en ⚙ Cuenta</div>
+        <button onclick="wFinalizar()" class="btn btn-p" style="width:100%;padding:13px">¡Listo, entrar! ✓</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="main">
 
 <!-- CARRUSEL SUGERENCIAS (visible solo antes del día 16) -->
@@ -906,6 +964,7 @@ function onLoginSuccess(user){
     }
     setSyncBadge('ok');
     renderAll(); simSetDay(0); appInit();
+    showWelcomeIfNeeded();
   });
 }
 
@@ -1701,6 +1760,65 @@ function applyFontSize(){
 
 function initTheme(){setTheme(_theme);}
 function initFontSize(){ applyFontSize(); }
+// ── WIZARD DE BIENVENIDA ──
+var _wTheme='dark', _wFont=1;
+
+window.wSelectTheme=function(t){
+  _wTheme=t;
+  ['dark','light','blue','military'].forEach(function(th){
+    var cap=th.charAt(0).toUpperCase()+th.slice(1);
+    var btn=document.getElementById('wTheme'+cap);
+    if(!btn)return;
+    if(th===t){
+      btn.style.borderColor='var(--green)';btn.style.background='rgba(0,230,118,.1)';btn.style.color='var(--green)';
+    } else {
+      btn.style.borderColor='var(--bdr)';btn.style.background='var(--sur2)';btn.style.color='var(--tx2)';
+    }
+  });
+  setTheme(t);
+};
+
+window.wSelectFont=function(idx){
+  _wFont=idx;
+  for(var i=0;i<5;i++){
+    var btn=document.getElementById('wFont'+i);
+    if(!btn)continue;
+    if(i===idx){
+      btn.style.borderColor='var(--green)';btn.style.background='rgba(0,230,118,.1)';btn.style.color='var(--green)';
+    } else {
+      btn.style.borderColor='var(--bdr)';btn.style.background='var(--sur2)';btn.style.color='var(--tx2)';
+    }
+  }
+  _fontIdx=idx; applyFontSize();
+};
+
+window.wGoStep2=function(){
+  document.getElementById('wStep1').style.display='none';
+  document.getElementById('wStep2').style.display='';
+  wSelectFont(_wFont);
+};
+
+window.wFinalizar=function(){
+  localStorage.setItem('app_theme',_wTheme);
+  localStorage.setItem('font_size_idx',_wFont);
+  localStorage.setItem('wizard_done_'+(_currentUser?_currentUser.uid:'x'),'1');
+  document.getElementById('welcomeModal').style.display='none';
+  document.body.style.overflow='';
+};
+
+function showWelcomeIfNeeded(){
+  if(!_currentUser) return;
+  var done=localStorage.getItem('wizard_done_'+_currentUser.uid);
+  if(!done){
+    _wTheme=_theme; _wFont=_fontIdx;
+    wSelectTheme(_wTheme);
+    document.getElementById('wStep1').style.display='';
+    document.getElementById('wStep2').style.display='none';
+    document.getElementById('welcomeModal').style.display='flex';
+    document.body.style.overflow='hidden';
+  }
+}
+
 window.saveGeminiKey=function(){
   var k=document.getElementById('geminiKey').value.trim();
   if(!k||k.length<10){stGeminiKey('Clave inválida','warn');return;}
