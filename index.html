@@ -718,6 +718,32 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     </div>
   </div>
 
+  <!-- Tamaño de fuente -->
+  <div class="card">
+    <div class="card-title">Tamaño de texto</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px">Útil para vista cansada o lectura nocturna</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button onclick="changeFontSize(-1)" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--bdr);background:var(--sur2);color:var(--tx);font-size:22px;cursor:pointer;font-weight:700;flex-shrink:0">−</button>
+      <div style="flex:1">
+        <div style="height:8px;background:var(--sur3);border-radius:4px;position:relative;cursor:pointer" onclick="setFontByClick(event,this)">
+          <div id="fontSizeBar" style="height:100%;background:var(--green);border-radius:4px;width:40%;transition:width .2s"></div>
+          <div id="fontSizeThumb" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;background:var(--green);border-radius:50%;left:40%;box-shadow:0 0 8px var(--gg);transition:left .2s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">Pequeño</span>
+          <span id="fontSizeLabel" style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:700">Normal</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--tx3)">Grande</span>
+        </div>
+      </div>
+      <button onclick="changeFontSize(1)" style="width:44px;height:44px;border-radius:8px;border:1px solid var(--bdr);background:var(--sur2);color:var(--tx);font-size:22px;cursor:pointer;font-weight:700;flex-shrink:0">+</button>
+    </div>
+    <!-- Preview -->
+    <div style="background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:12px;text-align:center">
+      <div id="fontPreview" style="font-family:var(--mono);color:var(--tx);transition:font-size .2s">Vista previa del texto</div>
+      <div id="fontPreview2" style="font-family:var(--sans);color:var(--tx2);margin-top:4px;transition:font-size .2s">Saldo del período actual</div>
+    </div>
+  </div>
+
   <!-- Cambiar contraseña -->
   <div class="card">
     <div class="card-title">Cambiar contraseña</div>
@@ -1628,7 +1654,53 @@ window.setTheme=function(t){
   });
 };
 
+// ── TAMAÑO DE FUENTE ──
+var _fontSizes = [
+  {name:'Pequeño',  scale:0.85, pct:0  },
+  {name:'Normal',   scale:1.0,  pct:40 },
+  {name:'Mediano',  scale:1.15, pct:65 },
+  {name:'Grande',   scale:1.30, pct:82 },
+  {name:'Muy grande',scale:1.50,pct:100}
+];
+var _fontIdx = parseInt(localStorage.getItem('font_size_idx')||'1');
+
+window.changeFontSize=function(dir){
+  _fontIdx = Math.max(0, Math.min(_fontSizes.length-1, _fontIdx+dir));
+  applyFontSize();
+};
+
+window.setFontByClick=function(e, el){
+  var rect=el.getBoundingClientRect();
+  var pct=(e.clientX-rect.left)/rect.width*100;
+  var closest=0, minDist=999;
+  _fontSizes.forEach(function(fs,i){
+    var d=Math.abs(fs.pct-pct);
+    if(d<minDist){minDist=d;closest=i;}
+  });
+  _fontIdx=closest;
+  applyFontSize();
+};
+
+function applyFontSize(){
+  localStorage.setItem('font_size_idx', _fontIdx);
+  var fs=_fontSizes[_fontIdx];
+  document.documentElement.style.fontSize=(fs.scale*100)+'%';
+
+  var bar=document.getElementById('fontSizeBar');
+  var thumb=document.getElementById('fontSizeThumb');
+  var label=document.getElementById('fontSizeLabel');
+  var prev=document.getElementById('fontPreview');
+  var prev2=document.getElementById('fontPreview2');
+
+  if(bar) bar.style.width=fs.pct+'%';
+  if(thumb) thumb.style.left=fs.pct+'%';
+  if(label){label.textContent=fs.name;}
+  if(prev) prev.style.fontSize=(13*fs.scale)+'px';
+  if(prev2) prev2.style.fontSize=(12*fs.scale)+'px';
+}
+
 function initTheme(){setTheme(_theme);}
+function initFontSize(){ applyFontSize(); }
 window.saveGeminiKey=function(){
   var k=document.getElementById('geminiKey').value.trim();
   if(!k||k.length<10){stGeminiKey('Clave inválida','warn');return;}
@@ -2193,6 +2265,7 @@ function appInit(){
   setProvider(_iaProvider);
   initSabadoSelector();
   initTheme();
+  initFontSize();
 }
 
 function hideAuthLoading(){
