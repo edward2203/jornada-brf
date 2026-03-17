@@ -272,6 +272,7 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
   <button class="nav-tab" onclick="nav('historial')">Historial</button>
   <button class="nav-tab" onclick="nav('simulador')">Planificar</button>
   <button class="nav-tab" onclick="nav('resumen')">Resumen</button>
+  <button class="nav-tab" onclick="nav('salario')" style="color:var(--amb)">💰 Salario</button>
   <button class="nav-tab" onclick="nav('ia')" style="color:var(--green)">✦ IA</button>
   <button class="nav-tab hi" onclick="nav('importar')">Importar BRF</button>
   <button class="nav-tab" onclick="nav('admin')" style="color:#aaa">⚙ Cuenta</button>
@@ -863,6 +864,47 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     </div>
   </div>
 
+  <!-- Configuración de salario -->
+  <div class="card" style="border-color:rgba(255,171,64,.3)">
+    <div class="card-title">Configuración de salário</div>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:14px;line-height:1.7">Completá tu datos para calcular la estimativa. Solo vos ves esta información.</p>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg">
+        <label>Tipo de contrato</label>
+        <select id="cfgTipoSal" class="form-control" style="font-size:13px">
+          <option value="horista">Horista (por hora)</option>
+          <option value="mensalista">Mensalista (salario fijo)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label id="cfgSalLabel">Valor por hora (R$)</label>
+        <input type="number" id="cfgValorHora" class="form-control" placeholder="9.35" step="0.01" min="0" style="font-size:14px">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg">
+        <label>% Extra 1 (hasta 2h)</label>
+        <input type="number" id="cfgExtra1" class="form-control" placeholder="50" min="0" max="200" style="font-size:14px">
+      </div>
+      <div class="fg">
+        <label>% Extra 2 (domingo/feriado)</label>
+        <input type="number" id="cfgExtra2" class="form-control" placeholder="100" min="0" max="200" style="font-size:14px">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="fg">
+        <label>Adicional noturno (%)</label>
+        <input type="number" id="cfgNoturno" class="form-control" placeholder="20" min="0" max="100" style="font-size:14px">
+      </div>
+      <div class="fg">
+        <label>Horas/mes contratadas</label>
+        <input type="number" id="cfgHMes" class="form-control" placeholder="220" min="1" style="font-size:14px">
+      </div>
+    </div>
+    <div id="cfgSalMsg" style="font-family:var(--mono);font-size:10px;margin-bottom:10px;display:none"></div>
+    <button class="btn btn-p" onclick="saveSalarioCfg()" style="width:100%;background:var(--amb);color:#000">Guardar configuración</button>
+  </div>
+
   <!-- Configuración de turno -->
   <div class="card">
     <div class="card-title">Mi turno de trabajo</div>
@@ -921,6 +963,57 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div class="card-title" style="color:var(--red)">Sesión</div>
     <p style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:14px">Al salir volverás a la pantalla de inicio de sesión.</p>
     <button onclick="logoutConfirm()" style="width:100%;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--red);padding:13px;border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.05em">⬡ CERRAR SESIÓN</button>
+  </div>
+</div>
+
+<!-- SALARIO -->
+<div class="panel" id="panel-salario">
+  <div class="sec-hdr"><div class="sec-title">💰 Estimativa de Salário</div></div>
+
+  <!-- Resumen principal -->
+  <div class="card" style="border-color:rgba(255,171,64,.3)">
+    <div class="card-title">Período actual</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="stat-box">
+        <div class="stat-label">Horas normales</div>
+        <div class="stat-value" id="salHNorm">--</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Horas extra</div>
+        <div class="stat-value pos" id="salHExtra">--</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Valor normal</div>
+        <div class="stat-value" id="salVNorm">--</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Valor extras</div>
+        <div class="stat-value pos" id="salVExtra">--</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,171,64,.08);border:1px solid rgba(255,171,64,.25);border-radius:10px;padding:14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Estimativa bruta do período</div>
+      <div style="font-family:var(--cond);font-size:36px;font-weight:700;color:var(--amb)" id="salTotal">R$ --</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px" id="salObs">Configura tu salário em ⚙ Conta</div>
+    </div>
+  </div>
+
+  <!-- Desglose detallado -->
+  <div class="card">
+    <div class="card-title">Desglose del período</div>
+    <div id="salDesglose" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
+  </div>
+
+  <!-- Valor de cada hora -->
+  <div class="card">
+    <div class="card-title">Referencia — valor por tipo de hora</div>
+    <div id="salReferencia" style="font-family:var(--mono);font-size:12px;color:var(--tx2)">--</div>
+  </div>
+
+  <!-- Proyección mensual -->
+  <div class="card">
+    <div class="card-title">Proyección al cierre del período</div>
+    <div id="salProyeccion" style="font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.8">--</div>
   </div>
 </div>
 
@@ -1298,7 +1391,8 @@ window.nav=function(id){
   if(id==='dashboard')renderDash();
   if(id==='simulador'){calcSim();calcOut();}
   if(id==='ia'){renderIA();}
-  if(id==='admin'){fillAdminPanel();fillTurnoCfg();}
+  if(id==='admin'){fillAdminPanel();fillTurnoCfg();fillSalarioCfg();}
+  if(id==='salario'){renderSalario();}
 };
 
 // ── ALERTS ──
@@ -1848,7 +1942,154 @@ window.clearKey=function(){localStorage.removeItem('brf_key');document.getElemen
 function getKey(){return localStorage.getItem('brf_key')||'';}
 function stKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};var el=document.getElementById('keyStatus');if(el){el.style.color=co[t]||'var(--tx2)';el.textContent=m;}}
 
-// ── TEMAS ──
+// ── SALARIO ──
+
+function cfgSal(){
+  var def={
+    tipo:'horista', valorHora:9.35,
+    extra1:50, extra2:100, noturno:20, hMes:220
+  };
+  try{return Object.assign({},def,JSON.parse(localStorage.getItem((cfgKey()+'_sal'))||'{}'));}
+  catch(e){return def;}
+}
+function saveCfgSal(c){localStorage.setItem(cfgKey()+'_sal',JSON.stringify(Object.assign(cfgSal(),c)));}
+
+function fmBRL(v){
+  return 'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+
+window.saveSalarioCfg=function(){
+  var get=function(id){return document.getElementById(id);};
+  var tipo=(get('cfgTipoSal')||{}).value||'horista';
+  var vh=parseFloat((get('cfgValorHora')||{}).value)||0;
+  var e1=parseFloat((get('cfgExtra1')||{}).value)||50;
+  var e2=parseFloat((get('cfgExtra2')||{}).value)||100;
+  var no=parseFloat((get('cfgNoturno')||{}).value)||20;
+  var hm=parseFloat((get('cfgHMes')||{}).value)||220;
+  saveCfgSal({tipo:tipo,valorHora:vh,extra1:e1,extra2:e2,noturno:no,hMes:hm});
+  var msg=get('cfgSalMsg');
+  if(msg){msg.textContent='✓ Guardado';msg.style.color='var(--green)';msg.style.display='';}
+  renderSalario();
+};
+
+function fillSalarioCfg(){
+  var c=cfgSal();
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
+  set('cfgTipoSal',c.tipo);
+  set('cfgValorHora',c.valorHora);
+  set('cfgExtra1',c.extra1);
+  set('cfgExtra2',c.extra2);
+  set('cfgNoturno',c.noturno);
+  set('cfgHMes',c.hMes);
+}
+
+function renderSalario(){
+  var c=cfgSal();
+  var turno=cfg();
+  var vh=c.valorHora||0;
+  if(!vh){
+    ['salHNorm','salHExtra','salVNorm','salVExtra'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.textContent='--';
+    });
+    var tot=document.getElementById('salTotal');
+    if(tot)tot.textContent='R$ --';
+    var obs=document.getElementById('salObs');
+    if(obs)obs.textContent='Configurá tu salário en ⚙ Cuenta → Configuración de salário';
+    return;
+  }
+
+  var p=getPeriod(todayStr());
+  var data=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
+
+  // Sumar horas
+  var minNorm=0, minExtra=0;
+  data.forEach(function(r){
+    if(!r.ef||r.ef<=0) return;
+    var norm=Math.min(r.ef, JORNADA_MIN);
+    var ext=Math.max(0,r.ef-JORNADA_MIN);
+    minNorm+=norm; minExtra+=ext;
+  });
+
+  var hNorm=minNorm/60, hExtra=minExtra/60;
+  var vHoraExtra=vh*(1+c.extra1/100);
+
+  var vNorm, vExtra;
+  if(c.tipo==='horista'){
+    vNorm=hNorm*vh;
+    vExtra=hExtra*vHoraExtra;
+  } else {
+    // Mensalista: salario fijo + extras
+    var valorHoraCalc=vh/c.hMes;
+    vNorm=vh; // ya es el sueldo fijo
+    vExtra=hExtra*(valorHoraCalc*(1+c.extra1/100));
+  }
+
+  var vTotal=vNorm+vExtra;
+
+  // Actualizar UI
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+  set('salHNorm', fmMin(minNorm));
+  set('salHExtra', '+'+fmMin(minExtra));
+  set('salVNorm', fmBRL(vNorm));
+  set('salVExtra', '+'+fmBRL(vExtra));
+  set('salTotal', fmBRL(vTotal));
+  set('salObs', data.length+' días registrados en el período · estimativa bruta');
+
+  // Desglose
+  var des=document.getElementById('salDesglose');
+  if(des){
+    var rows=data.filter(function(r){return r.ef>0;}).map(function(r){
+      var norm=Math.min(r.ef,JORNADA_MIN), ext=Math.max(0,r.ef-JORNADA_MIN);
+      var vd=c.tipo==='horista'?(norm/60*vh)+(ext/60*vHoraExtra):0;
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        +'<span style="color:var(--tx2)">'+fmDate(r.fecha)+'</span>'
+        +'<span>'+fmMin(norm)+'<span style="color:var(--tx3)"> norm</span>'+(ext>0?' +<span style="color:var(--amb)">'+fmMin(ext)+'</span> ext':'')+'</span>'
+        +(c.tipo==='horista'?'<span style="color:var(--amb)">'+fmBRL(vd)+'</span>':'')
+        +'</div>';
+    }).join('');
+    des.innerHTML=rows||'<span style="color:var(--tx3)">Sin registros con horas trabajadas</span>';
+  }
+
+  // Referencia de valores
+  var ref=document.getElementById('salReferencia');
+  if(ref){
+    var hExtra2=vh*(1+c.extra2/100);
+    var hNot=vh*(1+c.noturno/100);
+    ref.innerHTML=[
+      ['Hora normal', fmBRL(vh),'var(--tx)'],
+      ['Hora extra +'+c.extra1+'%', fmBRL(vHoraExtra),'var(--amb)'],
+      ['Hora extra +'+c.extra2+'% (dom/feriado)', fmBRL(hExtra2),'#ff9800'],
+      ['Hora noturna +'+c.noturno+'%', fmBRL(hNot),'var(--blu)']
+    ].map(function(r){
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        +'<span style="color:var(--tx2)">'+r[0]+'</span>'
+        +'<strong style="color:'+r[2]+'">'+r[1]+'</strong></div>';
+    }).join('');
+  }
+
+  // Proyección
+  var proy=document.getElementById('salProyeccion');
+  if(proy){
+    var t=todayStr();
+    var diasTot=Math.ceil((new Date(p.end+'T00:00:00')-new Date(p.start+'T00:00:00'))/86400000)+1;
+    var diasReg=data.length;
+    var diasRest=Math.max(0,Math.ceil((new Date(p.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000));
+    var promDia=diasReg>0?vTotal/diasReg:0;
+    var proyTotal=vTotal+(promDia*diasRest);
+    proy.innerHTML='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<span style="color:var(--tx2)">Acumulado hasta hoy</span><strong style="color:var(--amb)">'+fmBRL(vTotal)+'</strong></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<span style="color:var(--tx2)">Días restantes</span><span>'+diasRest+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<span style="color:var(--tx2)">Promedio por día</span><span>'+fmBRL(promDia)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:10px 0">'
+      +'<span style="color:var(--tx);font-weight:700">Proyección al cierre</span>'
+      +'<strong style="color:var(--green);font-size:16px">'+fmBRL(proyTotal)+'</strong></div>'
+      +'<div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-top:4px">* Estimativa bruta — sin descuentos (INSS, IRRF, etc.)</div>';
+  }
+}
+
+window.JORNADA_MIN_SAL = 440; // referencia para cálculos de salario
 var _theme = localStorage.getItem('app_theme')||'dark';
 
 window.setTheme=function(t){
