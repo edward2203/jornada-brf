@@ -2000,13 +2000,14 @@ function renderSalario(){
 
   var p=getPeriod(todayStr());
   var data=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
+  var JM=440; // 7h20 en minutos
 
   // Sumar horas
   var minNorm=0, minExtra=0;
   data.forEach(function(r){
     if(!r.ef||r.ef<=0) return;
-    var norm=Math.min(r.ef, JORNADA_MIN);
-    var ext=Math.max(0,r.ef-JORNADA_MIN);
+    var norm=Math.min(r.ef, JM);
+    var ext=Math.max(0,r.ef-JM);
     minNorm+=norm; minExtra+=ext;
   });
 
@@ -2018,15 +2019,13 @@ function renderSalario(){
     vNorm=hNorm*vh;
     vExtra=hExtra*vHoraExtra;
   } else {
-    // Mensalista: salario fijo + extras
     var valorHoraCalc=vh/c.hMes;
-    vNorm=vh; // ya es el sueldo fijo
+    vNorm=vh;
     vExtra=hExtra*(valorHoraCalc*(1+c.extra1/100));
   }
 
   var vTotal=vNorm+vExtra;
 
-  // Actualizar UI
   var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
   set('salHNorm', fmMin(minNorm));
   set('salHExtra', '+'+fmMin(minExtra));
@@ -2035,11 +2034,10 @@ function renderSalario(){
   set('salTotal', fmBRL(vTotal));
   set('salObs', data.length+' días registrados en el período · estimativa bruta');
 
-  // Desglose
   var des=document.getElementById('salDesglose');
   if(des){
     var rows=data.filter(function(r){return r.ef>0;}).map(function(r){
-      var norm=Math.min(r.ef,JORNADA_MIN), ext=Math.max(0,r.ef-JORNADA_MIN);
+      var norm=Math.min(r.ef,JM), ext=Math.max(0,r.ef-JM);
       var vd=c.tipo==='horista'?(norm/60*vh)+(ext/60*vHoraExtra):0;
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         +'<span style="color:var(--tx2)">'+fmDate(r.fecha)+'</span>'
