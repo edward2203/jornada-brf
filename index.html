@@ -865,105 +865,87 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     </div>
   </div>
 
-  <!-- Configuración de salario -->
+  <!-- Configuración de salario via Holerite -->
   <div class="card" style="border-color:rgba(255,171,64,.3)">
-    <div class="card-title">Configuración de salário</div>
-    <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:16px;line-height:1.7">Solo vos ves esta información. Completá con los datos de tu holerite.</p>
+    <div class="card-title">💰 Configuração Salarial</div>
 
-    <div style="font-family:var(--mono);font-size:10px;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📄 Proventos</div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>Tipo de contrato</label>
-        <select id="cfgTipoSal" class="form-control" style="font-size:13px">
-          <option value="horista">Horista (por hora)</option>
-          <option value="mensalista">Mensalista (fijo)</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>Valor hora / salario (R$)</label>
-        <input type="number" id="cfgValorHora" class="form-control" placeholder="9.35" step="0.01" min="0">
-      </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>% Hora extra (normal)</label>
-        <input type="number" id="cfgExtra1" class="form-control" placeholder="50" min="0" max="200">
-      </div>
-      <div class="fg">
-        <label>% Hora extra (dom/feriado)</label>
-        <input type="number" id="cfgExtra2" class="form-control" placeholder="100" min="0" max="200">
-      </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>Adicional noturno (%)</label>
-        <input type="number" id="cfgNoturno" class="form-control" placeholder="20" min="0" max="100">
-      </div>
-      <div class="fg">
-        <label>Horas/mes contratadas</label>
-        <input type="number" id="cfgHMes" class="form-control" placeholder="220" min="1">
-      </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:16px">
-      <div class="fg">
-        <label>Insalubridade (R$ fixo/mês)</label>
-        <input type="number" id="cfgInsalub" class="form-control" placeholder="302.58" step="0.01" min="0">
-      </div>
-      <div class="fg">
-        <label>Troca uniforme (h/mês)</label>
-        <input type="number" id="cfgTrocaUnif" class="form-control" placeholder="3.38" step="0.01" min="0">
-      </div>
+    <!-- Resumen si ya está configurado -->
+    <div id="salCfgResumen" style="display:none;background:rgba(255,171,64,.08);border:1px solid rgba(255,171,64,.2);border-radius:9px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--amb);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✓ Configuração ativa</div>
+      <div id="salCfgResumenTxt" style="font-family:var(--mono);font-size:12px;color:var(--tx);line-height:1.8"></div>
+      <button onclick="toggleSalCfgEdit()" style="margin-top:8px;background:none;border:1px solid var(--bdr);color:var(--tx2);border-radius:6px;padding:4px 12px;font-family:var(--mono);font-size:10px;cursor:pointer">✎ Editar manualmente</button>
     </div>
 
-    <div style="font-family:var(--mono);font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:4px">📉 Descontos fixos</div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>Contrib. Assistencial (R$)</label>
-        <input type="number" id="cfgContribAssist" class="form-control" placeholder="50.00" step="0.01" min="0">
+    <!-- Upload holerite -->
+    <div id="salUploadZone">
+      <p style="font-family:var(--mono);font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.7">
+        📸 Subí la foto o PDF de tu holerite y la IA extrae todos los datos automáticamente.
+      </p>
+      <div onclick="document.getElementById('holInput').click()"
+        style="border:2px dashed var(--amb);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:rgba(255,171,64,.04);margin-bottom:12px">
+        <div style="font-size:28px;margin-bottom:6px">📄</div>
+        <div style="font-family:var(--cond);font-size:14px;font-weight:600;color:var(--amb)">Toca para seleccionar holerite</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px">JPG · PNG · PDF</div>
+        <input type="file" id="holInput" accept="image/*,application/pdf" style="display:none" onchange="onHolFile(event)">
       </div>
-      <div class="fg">
-        <label>Seguro de Vida (R$)</label>
-        <input type="number" id="cfgSegVida" class="form-control" placeholder="12.85" step="0.01" min="0">
+      <div id="holPreview" style="display:none;margin-bottom:12px;text-align:center">
+        <img id="holThumb" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--bdr)" src="">
+        <div id="holFileName" style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-top:4px"></div>
       </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>Conv. Odontológico (R$)</label>
-        <input type="number" id="cfgOdonto" class="form-control" placeholder="6.78" step="0.01" min="0">
-      </div>
-      <div class="fg">
-        <label>Cesta Básica (R$)</label>
-        <input type="number" id="cfgCesta" class="form-control" placeholder="1.00" step="0.01" min="0">
-      </div>
-    </div>
-
-    <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:4px">📉 Descontos variáveis</div>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div class="fg">
-        <label>Refeições/Restaurante (R$)</label>
-        <input type="number" id="cfgRefeicoes" class="form-control" placeholder="101.79" step="0.01" min="0">
-      </div>
-      <div class="fg">
-        <label>Lanche Automático (R$)</label>
-        <input type="number" id="cfgLanche" class="form-control" placeholder="10.65" step="0.01" min="0">
-      </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:16px">
-      <div class="fg">
-        <label>Loja BRF / Venda produtos (R$)</label>
-        <input type="number" id="cfgLoja" class="form-control" placeholder="291.00" step="0.01" min="0">
-      </div>
-      <div class="fg">
-        <label>Outros descontos (R$)</label>
-        <input type="number" id="cfgOutrosDesc" class="form-control" placeholder="0.00" step="0.01" min="0">
-      </div>
+      <button id="btnLerHol" onclick="lerHolerite()" class="btn btn-p" style="width:100%;background:var(--amb);color:#000;padding:13px;display:none">
+        ✦ Extraer datos con IA
+      </button>
+      <div id="holStatus" style="display:none;font-family:var(--mono);font-size:11px;margin-top:10px;padding:10px;border-radius:8px"></div>
     </div>
 
-    <div style="font-family:var(--mono);font-size:9px;color:var(--tx3);margin-bottom:12px;line-height:1.6">
-      ℹ️ INSS calculado automaticamente pela tabela progressiva 2026
+    <!-- Campos manuales (colapsables) -->
+    <div id="salCfgManual" style="display:none;margin-top:16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📄 Proventos</div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg">
+          <label>Tipo</label>
+          <select id="cfgTipoSal" class="form-control" style="font-size:13px">
+            <option value="horista">Horista</option>
+            <option value="mensalista">Mensalista</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Valor hora/salario (R$)</label>
+          <input type="number" id="cfgValorHora" class="form-control" placeholder="9.35" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg"><label>% Extra normal</label><input type="number" id="cfgExtra1" class="form-control" placeholder="50"></div>
+        <div class="fg"><label>% Extra dom/feriado</label><input type="number" id="cfgExtra2" class="form-control" placeholder="100"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg"><label>% Noturno</label><input type="number" id="cfgNoturno" class="form-control" placeholder="20"></div>
+        <div class="fg"><label>H/mes contratadas</label><input type="number" id="cfgHMes" class="form-control" placeholder="220"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="fg"><label>Insalubridade (R$)</label><input type="number" id="cfgInsalub" class="form-control" placeholder="302.58" step="0.01"></div>
+        <div class="fg"><label>Troca Uniforme (h)</label><input type="number" id="cfgTrocaUnif" class="form-control" placeholder="3.38" step="0.01"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📉 Descontos</div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg"><label>Contrib. Assistencial</label><input type="number" id="cfgContribAssist" class="form-control" placeholder="50.00" step="0.01"></div>
+        <div class="fg"><label>Seguro de Vida</label><input type="number" id="cfgSegVida" class="form-control" placeholder="12.85" step="0.01"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg"><label>Odontológico</label><input type="number" id="cfgOdonto" class="form-control" placeholder="6.78" step="0.01"></div>
+        <div class="fg"><label>Cesta Básica</label><input type="number" id="cfgCesta" class="form-control" placeholder="1.00" step="0.01"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="fg"><label>Refeições (R$)</label><input type="number" id="cfgRefeicoes" class="form-control" placeholder="101.79" step="0.01"></div>
+        <div class="fg"><label>Lanche (R$)</label><input type="number" id="cfgLanche" class="form-control" placeholder="10.65" step="0.01"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="fg"><label>Loja BRF (R$)</label><input type="number" id="cfgLoja" class="form-control" placeholder="291.00" step="0.01"></div>
+        <div class="fg"><label>Outros descontos</label><input type="number" id="cfgOutrosDesc" class="form-control" placeholder="0.00" step="0.01"></div>
+      </div>
+      <div id="cfgSalMsg" style="font-family:var(--mono);font-size:10px;margin-bottom:10px;display:none"></div>
+      <button class="btn btn-p" onclick="saveSalarioCfg()" style="width:100%;background:var(--amb);color:#000;padding:13px">💾 Guardar</button>
     </div>
-    <div id="cfgSalMsg" style="font-family:var(--mono);font-size:10px;margin-bottom:10px;display:none"></div>
-    <button class="btn btn-p" onclick="saveSalarioCfg()" style="width:100%;background:var(--amb);color:#000;padding:13px">💾 Guardar configuración salarial</button>
   </div>
 
   <!-- Configuración de turno -->
@@ -1491,7 +1473,7 @@ window.nav=function(id){
   if(id==='dashboard')renderDash();
   if(id==='simulador'){calcSim();calcOut();}
   if(id==='ia'){renderIA();}
-  if(id==='admin'){fillAdminPanel();fillTurnoCfg();fillSalarioCfg();}
+  if(id==='admin'){fillAdminPanel();fillTurnoCfg();fillSalarioCfg();updateSalCfgResumen();}
   if(id==='salario'){renderSalario();}
 };
 
@@ -2133,13 +2115,17 @@ function renderSalario(){
   }
 
   var p=getPeriod(todayStr());
-  var data=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
+  var allData=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end;});
   var JM=440;
+  var MAX_EF=720; // máx razonable = 12h. Si ef > 720 el dato está corrupto
+
+  // Filtrar datos con ef razonable
+  var data=allData.filter(function(r){return r.ef>0 && r.ef<=MAX_EF;});
+  var dataCorrompidos=allData.filter(function(r){return r.ef>MAX_EF;});
 
   // ── CALCULAR HORAS ──
   var minNorm=0, minExtra=0;
   data.forEach(function(r){
-    if(!r.ef||r.ef<=0) return;
     minNorm+=Math.min(r.ef,JM);
     minExtra+=Math.max(0,r.ef-JM);
   });
@@ -2153,12 +2139,10 @@ function renderSalario(){
   var vHorasNorm = c.tipo==='horista' ? hNorm*vh : c.valorHora;
   var vExtras     = hExtra*vHExtra;
   var vInsalub    = c.insalub||0;
-  var vTrocaUnif  = (c.trocaUnif||0)*vHExtra; // troca uniforme é paga como extra 50%
-  var vDSR        = 0; // calculado como % das horas
-  // DSR = (horas trabalhadas / dias úteis) × dias de DSR (aprox 4-5/mês)
-  var diasReg=data.filter(function(r){return r.ef>0;}).length;
-  var diasDSR=Math.floor(diasReg/6); // ~1 DSR por semana
-  if(c.tipo==='horista') vDSR=(hNorm/diasReg||0)*(diasDSR||0)*vh;
+  var vTrocaUnif  = (c.trocaUnif||0)*vHExtra;
+  var diasReg=data.length;
+  var diasDSR=Math.floor(diasReg/6);
+  var vDSR = c.tipo==='horista' && diasReg>0 ? (hNorm/diasReg)*diasDSR*vh : 0;
 
   var totalBruto = vHorasNorm + vExtras + vInsalub + vTrocaUnif + vDSR;
 
@@ -2171,17 +2155,25 @@ function renderSalario(){
 
   // ── ATUALIZAR UI ──
   set('salHNorm',  fmMin(minNorm));
-  set('salHExtra', '+'+fmMin(minExtra));
+  set('salHExtra', minExtra>0?'+'+fmMin(minExtra):'0h00');
   set('salDias',   diasReg+'d');
   set('salBruto',  fmBRL(totalBruto));
   set('salDescTotal','- '+fmBRL(totalDesc));
   set('salTotal',  fmBRL(liquido));
-  set('salObs',    diasReg+' días reg. · bruto '+fmBRL(totalBruto)+' · estimativa');
+  set('salObs',    diasReg+' días registrados en el período actual · estimativa');
+
+  // Aviso si hay datos corruptos
+  if(dataCorrompidos.length>0){
+    var aviso=document.getElementById('salProventos');
+    if(aviso) aviso.innerHTML='<div style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px">'
+      +'⚠ '+dataCorrompidos.length+' registro(s) con horas inválidas (ef>12h) fueron ignorados. Editá esos registros en Historial para corregirlos.</div>';
+  }
 
   // Proventos detalhados
   var pv='';
+  if(dataCorrompidos.length>0) pv+='<div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px">⚠ '+dataCorrompidos.length+' días ignorados por datos inválidos (ef>12h)</div>';
   pv+=rowSal('Horas normais ('+fmMin(minNorm)+')',vHorasNorm,'var(--tx)');
-  if(vExtras>0)    pv+=rowSal('Horas extra 50% ('+fmMin(minExtra)+')',vExtras,'var(--amb)');
+  if(vExtras>0)    pv+=rowSal('Horas extra '+c.extra1+'% ('+fmMin(minExtra)+')',vExtras,'var(--amb)');
   if(vInsalub>0)   pv+=rowSal('Adicional Insalubridade',vInsalub,'var(--amb)');
   if(vTrocaUnif>0) pv+=rowSal('Troca Uniforme Extra 50%',vTrocaUnif,'var(--tx2)');
   if(vDSR>0)       pv+=rowSal('Repouso Remunerado (DSR ~'+diasDSR+'d)',vDSR,'var(--tx2)');
@@ -2209,7 +2201,7 @@ function renderSalario(){
   // Desglose por dia
   var des=document.getElementById('salDesglose');
   if(des){
-    var rows=data.filter(function(r){return r.ef>0;}).map(function(r){
+    var rows=data.map(function(r){
       var norm=Math.min(r.ef,JM),ext=Math.max(0,r.ef-JM);
       var vd=(norm/60*vh)+(ext/60*vHExtra);
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
@@ -2217,7 +2209,7 @@ function renderSalario(){
         +'<span>'+fmMin(norm)+'<span style="color:var(--tx3)"> n</span>'+(ext>0?'+<span style="color:var(--amb)">'+fmMin(ext)+'</span>e':'')+'</span>'
         +(c.tipo==='horista'?'<span style="color:var(--amb)">'+fmBRL(vd)+'</span>':'')+'</div>';
     }).join('');
-    des.innerHTML=rows||'<span style="color:var(--tx3)">Sin días registrados</span>';
+    des.innerHTML=rows||'<span style="color:var(--tx3)">Sin días registrados en este período</span>';
   }
 
   // Referencia
@@ -2230,31 +2222,180 @@ function renderSalario(){
     ['FGTS (8% do bruto)',fmBRL(totalBruto*0.08),'var(--tx3)']
   ].map(function(r){return rowSal(r[0],r[1],r[2]).replace(fmBRL(r[1]),r[1]);}).join('');
 
-  // Proyección
+  // Proyección — basada en días úteis restantes (lun-sab), no días calendario totales
   var proy=document.getElementById('salProyeccion');
   if(proy){
     var t=todayStr();
-    var diasRest=Math.max(0,Math.ceil((new Date(p.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000));
-    var promDia=diasReg>0?liquido/diasReg:0;
-    var proyLiq=liquido+(promDia*diasRest);
-    var proyBruto=totalBruto+(diasReg>0?(totalBruto/diasReg)*diasRest:0);
+    var diasCalRest=Math.max(0,Math.ceil((new Date(p.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000));
+    // Estimar días laborables restantes (excluye domingos ~ 1 por semana)
+    var diasLabRestantes=Math.round(diasCalRest*6/7);
+    // Si hay pocos datos, usar valor de hora contratada como base en vez del promedio
+    var vPorDiaLaboral = diasReg>=5
+      ? (liquido/diasReg)  // promedio real si hay suficientes datos
+      : ((JM/60)*vh*(1-(totalDesc/Math.max(totalBruto,1)))); // estimativa por hora si pocos datos
+
+    var proyLiq = liquido + (vPorDiaLaboral * diasLabRestantes);
+    // Descontos fixos se descuentan solo una vez por período
+    var descFixosYaDescontados = diasReg > 0;
+    if(!descFixosYaDescontados) proyLiq -= vFixos;
+
+    var metodo = diasReg>=5 ? 'basado en promedio real' : 'basado en horas contratadas';
+
     proy.innerHTML=rowSal('Acumulado bruto',totalBruto,'var(--amb)')
       +rowSal('Acumulado líquido',liquido,'var(--green)')
       +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<span style="color:var(--tx2);font-size:11px">Días restantes</span><span>'+diasRest+'</span></div>'
+      +'<span style="color:var(--tx2);font-size:11px">Días laborables restantes</span><span>~'+diasLabRestantes+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<span style="color:var(--tx2);font-size:11px">Promedio líquido/día</span><span>'+fmBRL(promDia)+'</span></div>'
+      +'<span style="color:var(--tx2);font-size:11px">Valor est. por día</span><span>'+fmBRL(vPorDiaLaboral)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">'
       +'<strong style="color:var(--tx)">Proyección líquida al cierre</strong>'
       +'<strong style="color:var(--green);font-size:18px">'+fmBRL(proyLiq)+'</strong></div>'
       +'<div style="font-family:var(--mono);font-size:9px;color:var(--tx3);line-height:1.6">'
-      +'* Estimativa. INSS e DSR calculados aproximadamente. Loja BRF e refeições podem variar.</div>';
+      +'* '+metodo+'. INSS e DSR aproximados. Loja BRF e refeições variam.</div>';
   }
 }
 
 window.JORNADA_MIN_SAL = 440;
 
-// ── HOLERITE ──
+// ── UPLOAD HOLERITE → IA ──
+var _holFile = null;
+
+window.onHolFile=function(e){
+  var file=e.target.files[0];
+  if(!file) return;
+  _holFile=file;
+  var preview=document.getElementById('holPreview');
+  var thumb=document.getElementById('holThumb');
+  var fname=document.getElementById('holFileName');
+  var btnLer=document.getElementById('btnLerHol');
+  fname.textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
+  if(file.type.indexOf('image/')===0){
+    var reader=new FileReader();
+    reader.onload=function(ev){thumb.src=ev.target.result;preview.style.display='';};
+    reader.readAsDataURL(file);
+  } else {
+    thumb.src=''; preview.style.display='none';
+    document.getElementById('holFileName').textContent='📄 '+file.name;
+    preview.style.display='';
+  }
+  btnLer.style.display='';
+  document.getElementById('holStatus').style.display='none';
+};
+
+function stHol(msg,tipo){
+  var el=document.getElementById('holStatus');
+  var cols={ok:'rgba(0,230,118,.1)',warn:'rgba(255,171,64,.1)',error:'rgba(255,68,68,.1)',info:'rgba(64,196,255,.1)'};
+  var txc={ok:'var(--green)',warn:'var(--amb)',error:'var(--red)',info:'var(--blu)'};
+  el.style.display=''; el.style.background=cols[tipo]||cols.info;
+  el.style.border='1px solid '+(txc[tipo]||txc.info).replace('var','').replace('(','rgba(').replace(')',', .3)');
+  el.style.color=txc[tipo]||txc.info; el.innerHTML=msg;
+}
+
+window.lerHolerite=async function(){
+  if(!_holFile){stHol('Selecciona un archivo primero.','warn');return;}
+  var key=getKey(); var gkey=getGeminiKey();
+  if(!key&&!gkey){stHol('Configurá tu API Key en ✦ IA → Proveedor de IA primero.','warn');return;}
+  var btn=document.getElementById('btnLerHol');
+  btn.disabled=true; btn.textContent='⟳ Analizando holerite...';
+  stHol('<span class="spin"></span> Enviando a IA...','info');
+
+  var prompt=`Analiza este holerite/recibo de pagamento BRF y extrae los datos en JSON.
+Responde SOLO con JSON válido, sin texto ni backticks.
+Formato exacto:
+{
+  "tipo": "horista" o "mensalista",
+  "valorHora": número (valor hora ou salário base),
+  "extra1": número (% hora extra normal, ej: 50),
+  "extra2": número (% hora extra dom/feriado, ej: 100),
+  "noturno": número (% adicional noturno, ej: 20),
+  "hMes": número (horas mensais contratadas),
+  "insalub": número (valor adicional insalubridade),
+  "trocaUnif": número (horas troca uniforme),
+  "contribAssist": número (desconto contrib. assistencial),
+  "segVida": número (desconto seguro de vida),
+  "odonto": número (desconto odontológico),
+  "cesta": número (desconto cesta básica),
+  "refeicoes": número (desconto refeições/restaurante),
+  "lanche": número (desconto lanche),
+  "loja": número (desconto loja/vendas),
+  "outrosDesc": número (outros descontos)
+}
+Se um valor não aparecer no holerite, use 0.`;
+
+  try{
+    var reader=new FileReader();
+    var b64=await new Promise(function(res,rej){
+      reader.onload=function(ev){res(ev.target.result.split(',')[1]);};
+      reader.onerror=rej;
+      reader.readAsDataURL(_holFile);
+    });
+    var mimeType=_holFile.type||'image/jpeg';
+    var result;
+
+    if(_iaProvider==='gemini'&&gkey){
+      var res=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+gkey,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[
+          {inline_data:{mime_type:mimeType,data:b64}},
+          {text:prompt}
+        ]}],generationConfig:{maxOutputTokens:800}})
+      });
+      var data=await res.json();
+      if(data.error)throw new Error(data.error.message);
+      result=data.candidates[0].content.parts[0].text;
+    } else if(key){
+      var contentArr=[
+        {type:'image',source:{type:'base64',media_type:mimeType,data:b64}},
+        {type:'text',text:prompt}
+      ];
+      var res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:contentArr}]})
+      });
+      var data=await res.json();
+      if(data.error)throw new Error(data.error.message);
+      result=data.content[0].text;
+    } else {
+      throw new Error('Sin API Key disponible');
+    }
+
+    // Parsear JSON
+    var clean=result.replace(/```json|```/g,'').trim();
+    var parsed=JSON.parse(clean);
+
+    // Aplicar a la config
+    saveCfgSal(parsed);
+    fillSalarioCfg();
+    updateSalCfgResumen();
+    stHol('✓ Datos extraídos y guardados correctamente. Verificá en el resumen arriba.','ok');
+    renderSalario();
+
+  }catch(e){
+    stHol('Error: '+e.message+'. Intentá con mejor imagen o editá manualmente.','error');
+  }finally{
+    btn.disabled=false; btn.textContent='✦ Extraer datos con IA';
+  }
+};
+
+window.toggleSalCfgEdit=function(){
+  var manual=document.getElementById('salCfgManual');
+  manual.style.display=manual.style.display==='none'?'':'none';
+};
+
+function updateSalCfgResumen(){
+  var c=cfgSal();
+  var resEl=document.getElementById('salCfgResumen');
+  var txt=document.getElementById('salCfgResumenTxt');
+  if(!c.valorHora){resEl.style.display='none';return;}
+  resEl.style.display='';
+  txt.innerHTML=
+    'Tipo: <strong>'+c.tipo+'</strong> · '+(c.tipo==='horista'?'R$/h: <strong>'+c.valorHora.toFixed(2)+'</strong>':'Salário: <strong>R$ '+c.valorHora.toFixed(2)+'</strong>')+'<br>'
+    +'Extra: <strong>+'+c.extra1+'%</strong> · Insalubridade: <strong>R$ '+(c.insalub||0).toFixed(2)+'</strong><br>'
+    +'Descontos fixos: <strong>R$ '+((c.contribAssist||0)+(c.segVida||0)+(c.odonto||0)+(c.cesta||0)).toFixed(2)+'</strong>'
+    +' · Variáveis: <strong>R$ '+((c.refeicoes||0)+(c.lanche||0)+(c.loja||0)+(c.outrosDesc||0)).toFixed(2)+'</strong>';
+}
+
 window.gerarHolerite=function(){
   var c=cfgSal();
   var tc=cfg();
