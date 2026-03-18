@@ -1102,6 +1102,19 @@ tr.imp-new td{background:rgba(0,230,118,.03)}
     <div class="card-title">Proyección al cierre del período</div>
     <div id="salProyeccion" style="font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.8">--</div>
   </div>
+
+  <!-- HOLERITE -->
+  <div class="card" style="border-color:rgba(255,171,64,.2)">
+    <div class="card-title">📄 Holerite / Recibo de Pagamento</div>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--tx2);margin-bottom:14px;line-height:1.6">Simulação visual do holerite com base nas suas horas registradas e configuração salarial.</p>
+    <button class="btn btn-p" onclick="gerarHolerite()" style="width:100%;background:var(--amb);color:#000;margin-bottom:16px">Gerar Holerite</button>
+    <div id="holContainer" style="display:none">
+      <!-- Papel do holerite -->
+      <div id="holPaper" style="background:#fff;color:#111;border-radius:8px;padding:20px 18px;font-family:'Courier New',monospace;font-size:11px;line-height:1.6">
+      </div>
+      <button onclick="compartilharHolerite()" class="btn btn-s" style="width:100%;margin-top:10px">📤 Compartilhar / Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2240,6 +2253,119 @@ function renderSalario(){
 }
 
 window.JORNADA_MIN_SAL = 440;
+
+// ── HOLERITE ──
+window.gerarHolerite=function(){
+  var c=cfgSal();
+  var tc=cfg();
+  var vh=c.valorHora||0;
+  if(!vh){
+    alert('Configura tu valor hora en ⚙ Cuenta → Configuração salarial');
+    return;
+  }
+
+  var p=getPeriod(todayStr());
+  var data=withSaldo(gd().map(enrichReg)).filter(function(r){return r.fecha>=p.start&&r.fecha<=p.end&&r.ef>0;});
+  var JM=440;
+  var minNorm=0,minExtra=0;
+  data.forEach(function(r){
+    minNorm+=Math.min(r.ef,JM);
+    minExtra+=Math.max(0,r.ef-JM);
+  });
+  var hNorm=minNorm/60, hExtra=minExtra/60;
+  var vHExtra=vh*(1+c.extra1/100);
+  var diasReg=data.length;
+  var diasDSR=Math.floor(diasReg/6);
+
+  // Proventos
+  var vHNorm   = hNorm*vh;
+  var vExtras  = hExtra*vHExtra;
+  var vInsalub = c.insalub||0;
+  var vTroca   = (c.trocaUnif||0)*vHExtra;
+  var vDSR     = diasReg>0?(hNorm/diasReg)*diasDSR*vh:0;
+  var bruto    = vHNorm+vExtras+vInsalub+vTroca+vDSR;
+
+  // Descontos
+  var vINSS   = calcINSS(bruto);
+  var vFixos  = (c.contribAssist||0)+(c.segVida||0)+(c.odonto||0)+(c.cesta||0);
+  var vVariav = (c.refeicoes||0)+(c.lanche||0)+(c.loja||0)+(c.outrosDesc||0);
+  var totalDesc = vINSS+vFixos+vVariav;
+  var liquido   = bruto-totalDesc;
+
+  var fgts = bruto*0.08;
+
+  var email = _currentUser?_currentUser.email:'--';
+  var nomeEmp = email.split('@')[0].toUpperCase();
+  var mesAno  = fmDate(p.end).slice(3); // MM/YYYY
+  var comp    = fmDate(p.start).slice(3,5)+'/'+fmDate(p.start).slice(6);
+
+  function lin(label,val,tipo){
+    var spc=38-label.length;
+    var valStr=(tipo==='prov'?'+ ':tipo==='desc'?'- ':'  ')+val;
+    return label+' '.repeat(Math.max(1,spc))+valStr+'\n';
+  }
+  function sep(c,n){return (c||'─').repeat(n||52)+'\n';}
+  function ctr(txt,n){var s=Math.max(0,Math.floor(((n||52)-txt.length)/2));return ' '.repeat(s)+txt+'\n';}
+
+  var h='';
+  h+=sep('═');
+  h+=ctr('BRF S.A. - RECIBO DE PAGAMENTO');
+  h+=ctr('CNPJ: 01.838.723/0067-53');
+  h+=ctr('DISTRITO INDUSTRIAL DE DOURADOS/MS');
+  h+=sep('─');
+  h+=lin('FUNCIONÁRIO:',nomeEmp,'  ');
+  h+=lin('CARGO:','OPERADOR ETA ETE I','  ');
+  h+=lin('COMPETÊNCIA:',comp,'  ');
+  h+=lin('PERÍODO:',fmDate(p.start)+' a '+fmDate(p.end),'  ');
+  h+=lin('DIAS TRABALHADOS:',diasReg+'d ('+fmMin(minNorm)+' norm)','  ');
+  h+=sep('─');
+  h+=ctr('── PROVENTOS ──');
+  h+=lin('Horas Normais ('+hNorm.toFixed(2)+'h)',fmBRL(vHNorm),'prov');
+  if(vExtras>0)  h+=lin('H.Extra 50% ('+hExtra.toFixed(2)+'h)',fmBRL(vExtras),'prov');
+  if(vInsalub>0) h+=lin('Adicional Insalubridade',fmBRL(vInsalub),'prov');
+  if(vTroca>0)   h+=lin('Troca de Uniforme Extra',fmBRL(vTroca),'prov');
+  if(vDSR>0)     h+=lin('D.S.R. ('+diasDSR+'d)',fmBRL(vDSR),'prov');
+  h+=sep('·');
+  h+=lin('TOTAL PROVENTOS:',fmBRL(bruto),'prov');
+  h+=sep('─');
+  h+=ctr('── DESCONTOS ──');
+  h+=lin('INSS (tabela progr. 2026)',fmBRL(vINSS),'desc');
+  if(c.contribAssist>0) h+=lin('Contrib. Assistencial',fmBRL(c.contribAssist),'desc');
+  if(c.segVida>0)       h+=lin('Seguro de Vida',fmBRL(c.segVida),'desc');
+  if(c.odonto>0)        h+=lin('Conv. Odontológico',fmBRL(c.odonto),'desc');
+  if(c.cesta>0)         h+=lin('Cesta Básica',fmBRL(c.cesta),'desc');
+  if(c.refeicoes>0)     h+=lin('Refeições/Restaurante',fmBRL(c.refeicoes),'desc');
+  if(c.lanche>0)        h+=lin('Lanche Automático',fmBRL(c.lanche),'desc');
+  if(c.loja>0)          h+=lin('Loja BRF / Vendas',fmBRL(c.loja),'desc');
+  if(c.outrosDesc>0)    h+=lin('Outros',fmBRL(c.outrosDesc),'desc');
+  h+=sep('·');
+  h+=lin('TOTAL DESCONTOS:',fmBRL(totalDesc),'desc');
+  h+=sep('═');
+  h+=lin('💳 SALÁRIO LÍQUIDO:',fmBRL(liquido),'  ');
+  h+=sep('═');
+  h+=lin('FGTS (8% - não descontado):',fmBRL(fgts),'  ');
+  h+=sep('─');
+  h+=ctr('* Estimativa. Valores podem variar.');
+  h+=ctr('Gerado por Jornada BRF App');
+  h+=sep('═');
+
+  var paper=document.getElementById('holPaper');
+  paper.innerHTML='<pre style="white-space:pre-wrap;word-break:break-word;font-family:Courier New,monospace;font-size:11px;color:#111;margin:0;line-height:1.5">'+h+'</pre>';
+  document.getElementById('holContainer').style.display='';
+  paper.scrollIntoView({behavior:'smooth',block:'start'});
+};
+
+window.compartilharHolerite=function(){
+  var pre=document.querySelector('#holPaper pre');
+  if(!pre) return;
+  if(navigator.share){
+    navigator.share({title:'Holerite BRF',text:pre.textContent})
+      .catch(function(){});
+  } else {
+    navigator.clipboard.writeText(pre.textContent)
+      .then(function(){alert('Copiado!');});
+  }
+};
 // ── IDIOMA (i18n) ──
 var _lang = localStorage.getItem('app_lang')||'es';
 
