@@ -2028,11 +2028,11 @@ function stKey(m,t){var co={ok:'var(--green)',warn:'var(--amb)',error:'var(--red
 
 function cfgSal(){
   var def={
-    tipo:'horista', valorHora:9.35,
+    tipo:'horista', valorHora:0,
     extra1:50, extra2:100, noturno:20, hMes:220,
-    insalub:302.58, trocaUnif:3.38,
-    contribAssist:50, segVida:12.85, odonto:6.78, cesta:1.00,
-    refeicoes:101.79, lanche:10.65, loja:291.00, outrosDesc:0
+    insalub:0, trocaUnif:0,
+    contribAssist:0, segVida:0, odonto:0, cesta:0,
+    refeicoes:0, lanche:0, loja:0, outrosDesc:0
   };
   try{return Object.assign({},def,JSON.parse(localStorage.getItem((cfgKey()+'_sal'))||'{}'));}
   catch(e){return def;}
