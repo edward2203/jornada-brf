@@ -1135,7 +1135,7 @@ body.theme-military .saldo-tag.pos { background:rgba(163,230,53,.15); color:#A3E
     </div>
 
     <!-- Campos manuales (colapsables) -->
-    <div id="salCfgManual" style="display:none;margin-top:16px">
+    <div id="salCfgManual" style="display:block;margin-top:16px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📄 Proventos</div>
       <div class="form-grid" style="margin-bottom:12px">
         <div class="fg">
@@ -2527,38 +2527,87 @@ function stHol(msg,tipo){
   el.style.color=txc[tipo]||txc.info; el.innerHTML=msg;
 }
 
+// ── PARSE OCR TEXT → config salarial ──
+function parsearTextoHolerite(texto){
+  var t=texto.toUpperCase();
+  function extrairValor(patterns){
+    for(var i=0;i<patterns.length;i++){
+      var m=t.match(patterns[i]);
+      if(m){
+        var s=m[1].replace(/\./g,'').replace(',','.');
+        var v=parseFloat(s);
+        if(!isNaN(v)&&v>0) return v;
+      }
+    }
+    return 0;
+  }
+  // Detectar valor hora: linha com "H NORM" ou "HORAS NORMAIS" + valor grande
+  var valorHora=0;
+  // Tenta achar salário base / valor hora
+  var mVH=t.match(/(?:SALARIO BASE|VALOR HORA|H\.?\s*NORM[A-Z]*)[^\d]*(\d+[.,]\d{2})/);
+  if(mVH){
+    // Se for salário base mensal (>100), divide por 220 horas
+    var raw=parseFloat(mVH[1].replace(',','.'));
+    valorHora = raw>100 ? parseFloat((raw/220).toFixed(4)) : raw;
+  }
+  // Fallback: busca padrão "9,35" ou "9.35" perto de HORA
+  if(!valorHora){
+    var mH=t.match(/HORA[^\d]*(\d{1,2}[.,]\d{2})/);
+    if(mH) valorHora=parseFloat(mH[1].replace(',','.'));
+  }
+
+  return {
+    tipo: 'horista',
+    valorHora: valorHora||9.35,
+    extra1: 50, extra2: 100, noturno: 20, hMes: 220,
+    insalub:      extrairValor([/INSALUB[A-Z]*[^\d]*(\d+[.,]\d{2})/,/ADICIONAL INSALUB[^\d]*(\d+[.,]\d{2})/]),
+    trocaUnif:    extrairValor([/TROCA[^\d]*UNIF[^\d]*(\d+[.,]\d{2})/]),
+    contribAssist:extrairValor([/CONTRIB[^\d]*ASSIST[^\d]*(\d+[.,]\d{2})/,/C\.?\s*ASSIST[^\d]*(\d+[.,]\d{2})/]),
+    segVida:      extrairValor([/SEG[^\d]*VIDA[^\d]*(\d+[.,]\d{2})/,/SEGURO[^\d]*VIDA[^\d]*(\d+[.,]\d{2})/]),
+    odonto:       extrairValor([/ODONT[^\d]*(\d+[.,]\d{2})/,/ODONTOL[^\d]*(\d+[.,]\d{2})/]),
+    cesta:        extrairValor([/CESTA[^\d]*BAS[^\d]*(\d+[.,]\d{2})/,/CESTA[^\d]*(\d+[.,]\d{2})/]),
+    refeicoes:    extrairValor([/REFEI[^\d]*(\d+[.,]\d{2})/,/RESTAUR[^\d]*(\d+[.,]\d{2})/]),
+    lanche:       extrairValor([/LANCHE[^\d]*(\d+[.,]\d{2})/]),
+    loja:         extrairValor([/LOJA[^\d]*(\d+[.,]\d{2})/,/VENDA[^\d]*PROD[^\d]*(\d+[.,]\d{2})/]),
+    outrosDesc:   0
+  };
+}
+
 window.lerHolerite=async function(){
   if(!_holFile){stHol('Selecciona un archivo primero.','warn');return;}
-  var key=getKey(); var gkey=getGeminiKey();
-  if(!key&&!gkey){stHol('Configurá tu API Key en ✦ IA → Proveedor de IA primero.','warn');return;}
   var btn=document.getElementById('btnLerHol');
-  btn.disabled=true; btn.textContent='⟳ Analizando holerite...';
-  stHol('<span class="spin"></span> Enviando a IA...','info');
+  btn.disabled=true; btn.textContent='⟳ Lendo holerite...';
+  stHol('<span class="spin"></span> Processando imagem com OCR local...','info');
 
-  var prompt=`Analiza este holerite/recibo de pagamento BRF y extrae los datos en JSON.
-Responde SOLO con JSON válido, sin texto ni backticks.
-Formato exacto:
-{
-  "tipo": "horista" o "mensalista",
-  "valorHora": número (valor hora ou salário base),
-  "extra1": número (% hora extra normal, ej: 50),
-  "extra2": número (% hora extra dom/feriado, ej: 100),
-  "noturno": número (% adicional noturno, ej: 20),
-  "hMes": número (horas mensais contratadas),
-  "insalub": número (valor adicional insalubridade),
-  "trocaUnif": número (horas troca uniforme),
-  "contribAssist": número (desconto contrib. assistencial),
-  "segVida": número (desconto seguro de vida),
-  "odonto": número (desconto odontológico),
-  "cesta": número (desconto cesta básica),
-  "refeicoes": número (desconto refeições/restaurante),
-  "lanche": número (desconto lanche),
-  "loja": número (desconto loja/vendas),
-  "outrosDesc": número (outros descontos)
-}
-Se um valor não aparecer no holerite, use 0.`;
+  var key=getKey(); var gkey=getGeminiKey();
 
   try{
+    // ── MODO 1: OCR local com Tesseract.js (sem API Key) ──
+    if(!key&&!gkey){
+      if(typeof Tesseract==='undefined') throw new Error('Tesseract.js não carregou. Verifica a conexão.');
+      stHol('<span class="spin"></span> OCR local em andamento (pode demorar ~20s)...','info');
+      var ocrResult=await Tesseract.recognize(_holFile,'por',{logger:function(m){
+        if(m.status==='recognizing text'){
+          var pct=Math.round(m.progress*100);
+          stHol('<span class="spin"></span> OCR: '+pct+'% concluído...','info');
+        }
+      }});
+      var texto=ocrResult.data.text;
+      if(!texto||texto.trim().length<20) throw new Error('OCR não conseguiu ler o texto. Tente com foto mais nítida.');
+      var parsed=parsearTextoHolerite(texto);
+      saveCfgSal(parsed);
+      fillSalarioCfg();
+      updateSalCfgResumen();
+      stHol('✓ Dados extraídos com OCR local. Verifique os campos e ajuste se necessário.','ok');
+      // Mostrar campos manuais para conferência
+      var manual=document.getElementById('salCfgManual');
+      if(manual) manual.style.display='';
+      renderSalario();
+      return;
+    }
+
+    // ── MODO 2: IA com API Key ──
+    stHol('<span class="spin"></span> Enviando para IA...','info');
     var reader=new FileReader();
     var b64=await new Promise(function(res,rej){
       reader.onload=function(ev){res(ev.target.result.split(',')[1]);};
@@ -2566,51 +2615,43 @@ Se um valor não aparecer no holerite, use 0.`;
       reader.readAsDataURL(_holFile);
     });
     var mimeType=_holFile.type||'image/jpeg';
+    var prompt='Analiza este holerite BRF y extrae los datos en JSON. Responde SOLO con JSON válido, sin texto ni backticks.\n{"tipo":"horista","valorHora":0,"extra1":50,"extra2":100,"noturno":20,"hMes":220,"insalub":0,"trocaUnif":0,"contribAssist":0,"segVida":0,"odonto":0,"cesta":0,"refeicoes":0,"lanche":0,"loja":0,"outrosDesc":0}\nSe um valor não aparecer, usa 0.';
     var result;
 
     if(_iaProvider==='gemini'&&gkey){
       var res=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+gkey,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts:[
-          {inline_data:{mime_type:mimeType,data:b64}},
-          {text:prompt}
-        ]}],generationConfig:{maxOutputTokens:800}})
+        body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mimeType,data:b64}},{text:prompt}]}],generationConfig:{maxOutputTokens:800}})
       });
       var data=await res.json();
       if(data.error)throw new Error(data.error.message);
       result=data.candidates[0].content.parts[0].text;
-    } else if(key){
-      var contentArr=[
-        {type:'image',source:{type:'base64',media_type:mimeType,data:b64}},
-        {type:'text',text:prompt}
-      ];
+    } else {
       var res=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:contentArr}]})
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mimeType,data:b64}},
+          {type:'text',text:prompt}
+        ]}]})
       });
       var data=await res.json();
       if(data.error)throw new Error(data.error.message);
       result=data.content[0].text;
-    } else {
-      throw new Error('Sin API Key disponible');
     }
-
-    // Parsear JSON
-    var clean=result.replace(/```json|```/g,'').trim();
-    var parsed=JSON.parse(clean);
-
-    // Aplicar a la config
+    var parsed=JSON.parse(result.replace(/```json|```/g,'').trim());
     saveCfgSal(parsed);
     fillSalarioCfg();
     updateSalCfgResumen();
-    stHol('✓ Datos extraídos y guardados correctamente. Verificá en el resumen arriba.','ok');
+    stHol('✓ Dados extraídos pela IA e salvos corretamente.','ok');
     renderSalario();
 
   }catch(e){
-    stHol('Error: '+e.message+'. Intentá con mejor imagen o editá manualmente.','error');
+    stHol('Erro: '+e.message+'. Ajuste os campos manualmente abaixo.','error');
+    var manual=document.getElementById('salCfgManual');
+    if(manual) manual.style.display='';
   }finally{
-    btn.disabled=false; btn.textContent='✦ Extraer datos con IA';
+    btn.disabled=false; btn.textContent='✦ Extraer datos';
   }
 };
 
