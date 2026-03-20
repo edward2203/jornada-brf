@@ -1121,7 +1121,7 @@ body.theme-military .saldo-tag.pos { background:rgba(163,230,53,.15); color:#A3E
         style="border:2px dashed var(--amb);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:rgba(255,171,64,.04);margin-bottom:12px">
         <div style="font-size:28px;margin-bottom:6px">📄</div>
         <div style="font-family:var(--cond);font-size:14px;font-weight:600;color:var(--amb)">Toca para seleccionar holerite</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px">JPG · PNG · PDF</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:4px">JPG · PNG (OCR local) · PDF (requiere IA)</div>
         <input type="file" id="holInput" accept="image/*,application/pdf" style="display:none" onchange="onHolFile(event)">
       </div>
       <div id="holPreview" style="display:none;margin-bottom:12px;text-align:center">
@@ -2504,18 +2504,30 @@ window.onHolFile=function(e){
   var thumb=document.getElementById('holThumb');
   var fname=document.getElementById('holFileName');
   var btnLer=document.getElementById('btnLerHol');
-  fname.textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
-  if(file.type.indexOf('image/')===0){
+  var isPDF=file.type==='application/pdf';
+  var isImg=file.type.indexOf('image/')===0;
+  var key=getKey(); var gkey=getGeminiKey();
+  var tieneIA=!!(key||gkey);
+
+  if(isImg){
     var reader=new FileReader();
     reader.onload=function(ev){thumb.src=ev.target.result;preview.style.display='';};
     reader.readAsDataURL(file);
   } else {
     thumb.src=''; preview.style.display='none';
-    document.getElementById('holFileName').textContent='📄 '+file.name;
-    preview.style.display='';
   }
-  btnLer.style.display='';
-  document.getElementById('holStatus').style.display='none';
+  fname.textContent=(isPDF?'📄 ':'📎 ')+file.name+' ('+Math.round(file.size/1024)+'KB)';
+  preview.style.display='';
+
+  // Ajustar botão e aviso
+  if(isPDF&&!tieneIA){
+    btnLer.style.display='none';
+    stHol('⚠ Para PDFs se necesita API Key de IA. Usá una imagen JPG/PNG del holerite para OCR local, o configurá tu API Key en ✦ IA.','warn');
+  } else {
+    btnLer.textContent=tieneIA?'✦ Extraer datos con IA':'📷 Extraer datos (OCR local, sin API Key)';
+    btnLer.style.display='';
+    document.getElementById('holStatus').style.display='none';
+  }
 };
 
 function stHol(msg,tipo){
