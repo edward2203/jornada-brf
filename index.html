@@ -2596,6 +2596,10 @@ window.lerHolerite=async function(){
   try{
     // ── MODO 1: OCR local com Tesseract.js (sem API Key) ──
     if(!key&&!gkey){
+      // PDFs não são suportados por OCR local
+      if(_holFile.type==='application/pdf'){
+        throw new Error('PDFs requieren API Key. Sacá una foto del holerite (JPG/PNG) para usar OCR local sin API Key.');
+      }
       if(typeof Tesseract==='undefined') throw new Error('Tesseract.js não carregou. Verifica a conexão.');
       stHol('<span class="spin"></span> OCR local em andamento (pode demorar ~20s)...','info');
       var ocrResult=await Tesseract.recognize(_holFile,'por',{logger:function(m){
