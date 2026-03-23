@@ -55,6 +55,10 @@ document.querySelector('#app').innerHTML = `
 
 <div class="ticks"></div>
 <section id="spacer"></section>
+
+<div style="padding: 20px 0; text-align: center; font-size: 11px; color: #a0aec0; font-family: sans-serif;">
+    v1.0.230326
+</div>
 `
 
 setupCounter(document.querySelector('#counter'))
