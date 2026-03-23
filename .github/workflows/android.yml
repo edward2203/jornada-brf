@@ -35,11 +35,11 @@ jobs:
 
       - name: Build Android APK
         run: |
-          # Usamos npx directamente desde los módulos instalados
           npx cap sync android
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          # Forzamos a Gradle a usar el JAVA_HOME que configuramos arriba
+          ./gradlew assembleDebug --no-daemon -Dorg.gradle.java.home=$JAVA_HOME_21_X64
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
