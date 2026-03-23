@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">jornada-brf</string>
+    <string name="app_name">Jornada BRF</string>
     <string name="title_activity_main">jornada-brf</string>
     <string name="package_name">com.jornadabrf.app</string>
     <string name="custom_url_scheme">com.jornadabrf.app</string>
