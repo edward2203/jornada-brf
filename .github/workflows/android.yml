@@ -19,7 +19,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        # Añadimos @capacitor/cli explícitamente para que npx lo encuentre
+        run: |
+          npm install
+          npm install @capacitor/cli @capacitor/android
 
       - name: Build Web Project (Vite)
         run: npm run build
@@ -32,7 +35,8 @@ jobs:
 
       - name: Build Android APK
         run: |
-          npx cap sync
+          # Usamos npx directamente desde los módulos instalados
+          npx cap sync android
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
